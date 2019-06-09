@@ -1,10 +1,10 @@
-import React, { useContext } from "react";
-import Tabs from "@material-ui/core/Tabs";
-import Tab from "@material-ui/core/Tab";
-import Button from "@material-ui/core/Button";
-import { makeStyles } from "@material-ui/core/styles";
-import SpectrumSelectGroup from "./SpectrumSelectGroup";
-import { AppContext, initialize } from "./Store";
+import React, { useContext } from "react"
+import Tabs from "@material-ui/core/Tabs"
+import Tab from "@material-ui/core/Tab"
+import Button from "@material-ui/core/Button"
+import { makeStyles } from "@material-ui/core/styles"
+import SpectrumSelectGroup from "./SpectrumSelectGroup"
+import { StateContext, initialize, DispatchContext } from "./Store"
 
 const useStyles = makeStyles(theme => ({
   tabHeader: {
@@ -27,26 +27,24 @@ const useStyles = makeStyles(theme => ({
       fontSize: ".9rem"
     }
   }
-}));
+}))
 
 const SpectraSelectForm = () => {
-  const {
-    state: { tab, formState },
-    dispatch
-  } = useContext(AppContext);
-  const classes = useStyles();
-  
+  const { tab, formState, ownerCategories } = useContext(StateContext)
+  const dispatch = useContext(DispatchContext)
+  const classes = useStyles()
+  console.log("formState", formState)
   const handleTabChange = (event, newValue) => {
     if (newValue !== tab) {
-      dispatch({ type: "CHANGE_TAB", payload: newValue });
+      dispatch({ type: "CHANGE_TAB", payload: newValue })
     }
-  };
+  }
 
   const isPopulated = category =>
-    formState[category] && formState[category].filter(i => i.value).length > 0;
+    formState[category] && formState[category].filter(i => i.value).length > 0
 
   const smartLabel = (label, cats) => {
-    const populated = cats.some(c => isPopulated(c));
+    const populated = cats.some(c => isPopulated(c))
     return (
       <span
         style={{
@@ -56,9 +54,13 @@ const SpectraSelectForm = () => {
         {label}
         {populated ? " ✶" : ""}
       </span>
-    );
-  };
+    )
+  }
 
+  console.log(
+    "%c RENDERED SpectraSelectForm",
+    "color: green; font-weight: bold;"
+  )
   return (
     <div>
       <Tabs
@@ -89,20 +91,45 @@ const SpectraSelectForm = () => {
       </Tabs>
       <TabContainer index={tab}>
         <div>
-          <SpectrumSelectGroup category="P" hint="Protein" />
-          <SpectrumSelectGroup category="D" hint="Dye" />
+          <SpectrumSelectGroup
+            options={ownerCategories["P"]}
+            selectors={formState["P"]}
+            category="P"
+            hint="Protein"
+          />
+          <SpectrumSelectGroup
+            options={ownerCategories["D"]}
+            selectors={formState["D"]}
+            category="D"
+            hint="Dye"
+          />
         </div>
-        <SpectrumSelectGroup category="F" hint="Filter" />
-        <SpectrumSelectGroup category="L" hint="Light Source" />
-        <SpectrumSelectGroup category="C" hint="Detector" />
+        <SpectrumSelectGroup
+          options={ownerCategories["F"]}
+          selectors={formState["F"]}
+          category="F"
+          hint="Filter"
+        />
+        <SpectrumSelectGroup
+          options={ownerCategories["L"]}
+          selectors={formState["L"]}
+          category="L"
+          hint="Light Source"
+        />
+        <SpectrumSelectGroup
+          options={ownerCategories["C"]}
+          selectors={formState["C"]}
+          category="C"
+          hint="Detector"
+        />
         <div>
           <Button
             variant="contained"
             color="secondary"
             className="mt-0"
             onClick={() => {
-              dispatch({ type: "RESET" });
-              initialize(dispatch, false);
+              dispatch({ type: "RESET" })
+              initialize(dispatch, false)
             }}
           >
             Remove All Spectra
@@ -110,8 +137,8 @@ const SpectraSelectForm = () => {
         </div>
       </TabContainer>
     </div>
-  );
-};
+  )
+}
 
 // here to make sure we always render each tab to maintain the formstate
 const TabContainer = ({ index, children }) =>
@@ -125,6 +152,6 @@ const TabContainer = ({ index, children }) =>
     >
       {React.cloneElement(child)}
     </div>
-  ));
+  ))
 
-export default SpectraSelectForm;
+export default SpectraSelectForm

@@ -1,81 +1,95 @@
-import React, { useEffect, useContext } from "react";
-import ReactDOM from "react-dom";
-import { ThemeProvider } from "@material-ui/styles";
-import IconButton from "@material-ui/core/IconButton";
-import SpectraSelectForm from "./SpectraSelectForm";
-import SpectraViewer from "./SpectraViewer";
-import { Store, AppContext } from "./Store";
-import LoadingLogo from "./LoadingLogo";
-import SearchModal from "./SearchModal";
-import WelcomeModal from "./WelcomeModal";
-import theme from "./theme";
-import SearchIcon from "@material-ui/icons/Search";
+import React, { useState, useMemo, useEffect } from "react"
+import ReactDOM from "react-dom"
+import { useQuery, useMutation } from "react-apollo-hooks"
+import {
+  SPECTRA_LIST,
+  GET_ACTIVE_SPECTRA,
+  UPDATE_ACTIVE_SPECTRA
+} from "./queries"
+import { ApolloProvider } from "react-apollo-hooks"
+import client from "./client"
+import { reshapeSpectraInfo } from "./util"
+import QuickEntry from "./QuickEntry"
+import SpectraViewer from "./SpectraViewer/SpectraViewer";
 
 
-const App = () => {
-  const { state } = useContext(AppContext);
-  const [searchOpen, setSearchOpen] = React.useState(false);
-
-  useEffect(() => {
-    // window.onpopstate = event => {
-    //   dispatch({
-    //     type: "UPDATE",
-    //     currentSpectra: event.state.currentSpectra
-    //   });
-    // };
-  }, []) // eslint-disable-line
+const Current = () => {
+  const {
+    loading,
+    data: { activeSpectra }
+  } = useQuery(GET_ACTIVE_SPECTRA)
+  const updateSpectra = useMutation(UPDATE_ACTIVE_SPECTRA)
+  const [value, setValue] = useState("")
 
   useEffect(() => {
-    if (!state.loading) {
-      const { currentSpectra, tab } = state;
-      let url = window.location.pathname;
-      if (currentSpectra.length > 0) {
-        url = `?s=${currentSpectra.join(",")}&t=${tab}`;
-      }
-      window.history.pushState(state, "", url);
+    setValue(activeSpectra.join(", "))
+  }, [activeSpectra])
+
+  const handleKey = e => {
+    if (e.key !== "Enter") {
+      return
     }
-  }, [state.currentSpectra, state.tab]) // eslint-disable-line
+    e.preventDefault()
 
-  return state && !state.loading ? (
-    <div style={{ position: "relative" }}>
-      <IconButton
-        style={{
-          position: "absolute",
-          top: -2,
-          right: 25,
-          zIndex: 2,
-          backgroundColor: "transparent"
-        }}
-        onClick={() => setSearchOpen(true)}
-      >
-        <SearchIcon />
-      </IconButton>
-      <SpectraViewer />
-      <SpectraSelectForm />
-      <SearchModal
-        options={Object.values(state.owners)}
-        open={searchOpen}
-        setOpen={setSearchOpen}
-      />
-      <WelcomeModal />
-    </div>
-  ) : (
-    <div style={{ position: "relative" }}>
-      <WelcomeModal />
-      <LoadingLogo />
-    </div>
-  );
-};
+    const newVal = e.target.value
+      .split(",")
+      .map(i => i.trim())
+      .filter(i => i)
+    updateSpectra({
+      variables: {
+        activeSpectra: newVal
+      },
+      update: (
+        cache,
+        {
+          data: {
+            updateActiveSpectra: { activeSpectra }
+          }
+        }
+      ) => {
+        setValue(activeSpectra.join(", "))
+      }
+    })
+  }
+  const handleChange = e => {
+    setValue(e.target.value)
+  }
+  if (loading) {
+    return <></>
+  }
+  return (
+    <input
+      type="text"
+      value={value}
+      style={{ width: "80%" }}
+      onKeyPress={handleKey}
+      onChange={handleChange}
+    />
+  )
+}
+const App = () => {
+  const { data, loading } = useQuery(SPECTRA_LIST)
+  const { owners, spectraInfo } = useMemo(() => reshapeSpectraInfo(data.spectra), [
+    data.spectra
+  ])
+
+  return (
+    <>
+      {loading ? "App loading" : ""}
+      {spectraInfo && <SpectraViewer spectraInfo={spectraInfo} />}
+      {owners && <QuickEntry options={Object.values(owners)} />}
+      <Current />
+    </>
+  )
+}
 
 const initReactSpectra = elem => {
   ReactDOM.render(
-    <Store>
-      <ThemeProvider theme={theme}>
-        <App />
-      </ThemeProvider>
-    </Store>,
+    <ApolloProvider client={client}>
+      <App />
+    </ApolloProvider>,
     document.getElementById(elem)
-  );
-};
+  )
+}
 
-export default initReactSpectra;
+export default initReactSpectra

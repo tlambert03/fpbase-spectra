@@ -27,6 +27,7 @@ code {
   background-color: #f7f7f7;
 }
 
-.highcharts-xaxis-labels text:first-of-type, .highcharts-xaxis-labels text:last-of-type{
-  display: none;
+.highcharts-label.highcharts-tooltip span {
+  padding: 0;
+  background-color: rgba(255,255,255,0.3);
 }

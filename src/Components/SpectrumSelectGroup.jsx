@@ -1,13 +1,13 @@
-import React, { useContext } from "react";
-import PropTypes from "prop-types";
-import Box from "@material-ui/core/Box";
-import IconButton from "@material-ui/core/IconButton";
-import Button from "@material-ui/core/Button";
-import DeleteIcon from "@material-ui/icons/Delete";
-import AddIcon from "@material-ui/icons/Add";
-import { makeStyles } from "@material-ui/core/styles";
-import SpectrumSelector from "./SpectrumSelector";
-import { AppContext } from "./Store";
+import React, { useContext } from "react"
+import PropTypes from "prop-types"
+import Box from "@material-ui/core/Box"
+import IconButton from "@material-ui/core/IconButton"
+import Button from "@material-ui/core/Button"
+import DeleteIcon from "@material-ui/icons/Delete"
+import AddIcon from "@material-ui/icons/Add"
+import { makeStyles } from "@material-ui/core/styles"
+import SpectrumSelector from "./SpectrumSelector"
+import { StateContext, DispatchContext } from "./Store"
 
 const useStyles = makeStyles(() => ({
   button: {
@@ -17,33 +17,32 @@ const useStyles = makeStyles(() => ({
     }
   },
   addButton: {
-    marginTop: 6,
+    marginTop: 6
   }
-}));
+}))
 
-const SpectrumSelectGroup = ({ category, hint }) => {
-  console.log('spec slec group')
-  const {
-    state: { formState, ownerCategories },
-    dispatch
-  } = useContext(AppContext);
-  const classes = useStyles();
-
-  const options = ownerCategories[category];
-  const selectors = formState[category];
+const SpectrumSelectGroup = React.memo(function SpectrumSelectGroup({
+  category,
+  hint,
+  selectors,
+  options
+}) {
+  const dispatch = useContext(DispatchContext)
+  const classes = useStyles()
 
   const addRow = () => {
-    dispatch({ type: "ADD_FORM_ROW", category });
-  };
+    dispatch({ type: "ADD_FORM_ROW", category })
+  }
 
   const removeRow = id => {
-    dispatch({ type: "REMOVE_FORM_ROW", category, id });
-  };
+    dispatch({ type: "REMOVE_FORM_ROW", category, id })
+  }
 
+  console.log("SpectrumSelectGroup rendered")
   // if (!formState[category]) addRow(category);
 
   if (!(selectors && selectors.length)) {
-    return <></>;
+    return <></>
   }
 
   return (
@@ -56,6 +55,9 @@ const SpectrumSelectGroup = ({ category, hint }) => {
                 category={category}
                 selector={selector}
                 options={options}
+                otherOwners={selectors
+                  .filter(i => i.value && i.value !== selector.value)
+                  .map(i => i.value)}
               />
             </Box>
             {selectors.length > 1 ? (
@@ -85,16 +87,18 @@ const SpectrumSelectGroup = ({ category, hint }) => {
         <AddIcon />
       </Button>
     </>
-  );
-};
+  )
+})
+
+SpectrumSelectGroup.whyDidYouRender = true
 
 SpectrumSelectGroup.propTypes = {
   category: PropTypes.string.isRequired,
   hint: PropTypes.string
-};
+}
 
 SpectrumSelectGroup.defaultProps = {
   hint: "item"
-};
+}
 
-export default SpectrumSelectGroup;
+export default SpectrumSelectGroup

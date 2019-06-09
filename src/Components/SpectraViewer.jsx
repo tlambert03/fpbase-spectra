@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useContext } from "react";
-import Highcharts from "highcharts";
+import React, { useState, useEffect, useContext } from "react"
+import Highcharts from "highcharts"
 import {
   withHighcharts,
   HighchartsChart,
@@ -10,23 +10,24 @@ import {
   AreaSplineSeries,
   Tooltip,
   Credits
-} from "react-jsx-highcharts";
-import applyExporting from "highcharts/modules/exporting";
-import applyExportingData from "highcharts/modules/export-data";
-import Switch from "@material-ui/core/Switch";
-import FormGroup from "@material-ui/core/FormGroup";
-import FormControlLabel from "@material-ui/core/FormControlLabel";
-import { AppContext, initialize } from "./Store";
-import { fetchSpectraList } from "./util";
-import fixLogScale from "./fixLogScale";
-import XRangePickers from "./XRangePickers";
+} from "react-jsx-highcharts"
+import applyExporting from "highcharts/modules/exporting"
+import applyExportingData from "highcharts/modules/export-data"
+import Switch from "@material-ui/core/Switch"
+import FormGroup from "@material-ui/core/FormGroup"
+import FormControlLabel from "@material-ui/core/FormControlLabel"
+import { StateContext, initialize, DispatchContext } from "./Store"
+import { fetchSpectraList } from "./util"
+import fixLogScale from "./fixLogScale"
+import XRangePickers from "./SpectraViewer/XRangePickers"
+import useWindowWidth from "./useWindowWidth"
 
-applyExporting(Highcharts);
-applyExportingData(Highcharts);
-fixLogScale(Highcharts);
+applyExporting(Highcharts)
+applyExportingData(Highcharts)
+fixLogScale(Highcharts)
 
 const FONTS =
-  'Roboto, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";';
+  'Roboto, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";'
 
 const SPECTRUM_CHARTOPTS = {
   chart: {
@@ -86,7 +87,7 @@ const SPECTRUM_CHARTOPTS = {
   legend: {
     verticalAlign: "top",
     align: "left",
-    width: '96%',
+    width: "96%",
     x: 0,
     y: -1,
     itemStyle: {
@@ -103,21 +104,21 @@ const SPECTRUM_CHARTOPTS = {
     shared: true,
     valueDecimals: 3,
     positioner(labelWidth, labelHeight, point) {
-      const chartwidth = this.chart.chartWidth;
+      const chartwidth = this.chart.chartWidth
       const y = Math.min(
         Math.max(point.plotY, 60),
         this.chart.chartHeight - labelHeight - 40
-      );
+      )
       if (40 + point.plotX + labelWidth < chartwidth) {
         return {
           x: point.plotX + 35,
           y
-        };
+        }
       }
       return {
         x: point.plotX - labelWidth - 20,
         y
-      };
+      }
     },
     shadow: false,
     style: {
@@ -169,55 +170,46 @@ const SPECTRUM_CHARTOPTS = {
       }
     }
   }
-};
+}
 
 const SpectraViewer = props => {
-  const [series, setSeries] = useState([]);
-  const { state, dispatch } = useContext(AppContext);
-
+  const [series, setSeries] = useState([])
+  const state = useContext(StateContext)
+  //const dispatch = useContext(DispatchContext)
   useEffect(() => {
     const updateSeriesData = async () => {
-      const { currentSpectra } = state;
-      let newSeries = series.filter(x => currentSpectra.includes(x.id));
-      const seriesIDs = newSeries.map(x => x.id);
-      const added = currentSpectra.filter(x => !seriesIDs.includes(x));
+      const { currentSpectra } = state
+      let newSeries = series.filter(x => currentSpectra.includes(x.id))
+      const seriesIDs = newSeries.map(x => x.id)
+      const added = currentSpectra.filter(x => !seriesIDs.includes(x))
 
       if (added.length) {
-        const newData = await fetchSpectraList(added);
-        newSeries = [...newSeries, ...newData];
+        const newData = await fetchSpectraList(added)
+        newSeries = [...newSeries, ...newData]
       }
-      setSeries(newSeries);
-    };
-    updateSeriesData();
-  }, [state.currentSpectra]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const exportOptions = { ...SPECTRUM_CHARTOPTS.exporting };
-  exportOptions.menuItemDefinitions = {
-    reset: {
-      onclick: () => {
-        dispatch({ type: "RESET" });
-        initialize(dispatch, false);
-      },
-      text: "Remove all spectra"
+      setSeries(newSeries)
     }
-  };
+    updateSeriesData()
+  }, [state.currentSpectra]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const OD = num => (num <= 0 ? 10 : -Math.log10(num));
-  const [logScale, setLogScale] = useState(false);
-  const showOD = logScale || state.formState.F.filter(i => i.value).length > 0;
+  const exportOptions = { ...SPECTRUM_CHARTOPTS.exporting }
+  // exportOptions.menuItemDefinitions = {
+  //   reset: {
+  //     onclick: () => {
+  //       dispatch({ type: "RESET" })
+  //       //initialize(dispatch, false)
+  //     },
+  //     text: "Remove all spectra"
+  //   }
+  // }
 
-  const calcHeight = () =>
-    (25 * document.getElementById("root").clientWidth) ** 0.58;
-  const [height, setHeight] = useState(calcHeight());
-  useEffect(() => {
-    window.onresize = () => {
-      setTimeout(() => setHeight(calcHeight()), 300);
-    };
-    return () => {
-      window.onresize = null;
-    };
-  }, []);
+  const OD = num => (num <= 0 ? 10 : -Math.log10(num))
+  const [logScale, setLogScale] = useState(false)
+  const showOD = logScale || state.formState.F.filter(i => i.value).length > 0
 
+  const width = useWindowWidth(300)
+  const height = (25 * width) ** 0.58
+  console.log("%c RENDERED SPECTRUM VIEWER", "color: red; font-weight: bold;")
   return (
     <div style={{ position: "relative" }}>
       {series.length < 1 ? <NoData height={height} /> : ""}
@@ -230,10 +222,10 @@ const SpectraViewer = props => {
         <Credits position={{ y: -45 }}>fpbase.org</Credits>
         <Legend {...SPECTRUM_CHARTOPTS.legend} />
 
-        <XRangePickers axisId="xAxis" />
-        <XAxis {...SPECTRUM_CHARTOPTS.xAxis}>
+        <XAxis {...SPECTRUM_CHARTOPTS.xAxis} id="3">
           <XAxis.Title style={{ display: "none" }}>Wavelength</XAxis.Title>
         </XAxis>
+        <XRangePickers axisId="3" />
 
         <YAxis
           {...SPECTRUM_CHARTOPTS.yAxis}
@@ -243,9 +235,9 @@ const SpectraViewer = props => {
           labels={{ enabled: logScale }}
         >
           {series.map(serie => {
-            let data = [...serie.data];
+            let data = [...serie.data]
             if (logScale) {
-              data = [...serie.data].map(([a, b]) => [a, OD(b)]);
+              data = [...serie.data].map(([a, b]) => [a, OD(b)])
             }
             return (
               <AreaSplineSeries
@@ -254,10 +246,9 @@ const SpectraViewer = props => {
                 data={data}
                 threshold={logScale ? 10 : 0}
               />
-            );
+            )
           })}
         </YAxis>
-
 
         <Tooltip {...SPECTRUM_CHARTOPTS.tooltip} />
       </HighchartsChart>
@@ -285,8 +276,8 @@ const SpectraViewer = props => {
         </FormGroup>
       )}
     </div>
-  );
-};
+  )
+}
 
 const NoData = ({ height }) => (
   <div>
@@ -328,12 +319,12 @@ const NoData = ({ height }) => (
       />
     </svg>
   </div>
-);
+)
 
-const MyChart = withHighcharts(SpectraViewer, Highcharts);
+const MyChart = withHighcharts(SpectraViewer, Highcharts)
 
-const test = (props) => {
-  return <MyChart></MyChart>
+const test = props => {
+  return <MyChart />
 }
 
-export default test;
+export default test

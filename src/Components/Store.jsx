@@ -10,7 +10,7 @@ import {
   emptyFormSelector
 } from "./util"
 
-const EXCLUDE_SUBTYPES = ['2P']
+const EXCLUDE_SUBTYPES = ["2P"]
 
 const initialState = {
   owners: {}, // mostly duplicate of ownerCategories, ownerSlug lookup
@@ -24,8 +24,6 @@ const initialState = {
   loading: true,
   tab: 0
 }
-
-const AppContext = React.createContext(initialState)
 
 // This function is responsible for making sure the form (minimally)
 // reflects the spectra ids in State.currentSpectra
@@ -103,10 +101,12 @@ const addAndRemoveFromArray = (array, action) => {
 function reducer(state, action) {
   switch (action.type) {
     case "UPDATE_SPECTRA": {
+      console.log("UPDATE_SPECTRA: ", action)
       const currentSpectra = addAndRemoveFromArray(state.currentSpectra, action)
       return { ...state, currentSpectra }
     }
     case "UPDATE": {
+      console.log("UPDATE dispatched", action)
       const newState = { ...state }
       Object.keys(action).forEach(prop => {
         if (prop !== "type" && prop in newState) {
@@ -167,6 +167,7 @@ function reducer(state, action) {
       return { ...newState, currentSpectra }
     }
     case "UPDATE_FORM": {
+      console.log("UPDATE_FORM dispatched", action)
       const { currentSpectra, spectraInfo, formState, owners } = state
       const newState = { ...state }
       newState.formState = stateToSpectraForms(
@@ -270,6 +271,9 @@ const initialize = async (dispatch, parseURL = true) => {
   dispatch({ type: "UPDATE", loading: false })
 }
 
+const StateContext = React.createContext(initialState)
+const DispatchContext = React.createContext(null)
+
 const Store = ({ children }) => {
   const [state, dispatch] = useReducer(reducer, initialState)
 
@@ -284,9 +288,11 @@ const Store = ({ children }) => {
   }, [state.currentSpectra]) // eslint-disable-line
 
   return (
-    <AppContext.Provider value={{ state, dispatch }}>
-      {children}
-    </AppContext.Provider>
+    <StateContext.Provider value={state}>
+      <DispatchContext.Provider value={dispatch}>
+        {children}
+      </DispatchContext.Provider>
+    </StateContext.Provider>
   )
 }
 
@@ -297,4 +303,4 @@ Store.propTypes = {
   ]).isRequired
 }
 
-export { Store, AppContext, initialize }
+export { Store, StateContext, DispatchContext, initialize }

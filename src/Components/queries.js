@@ -1,4 +1,34 @@
-import { gql } from "apollo-boost";
+import { gql } from "apollo-boost"
+window.gql = gql
+
+const batchSpectra = ids => {
+  const f = ids
+    .filter(i => i)
+    .map(
+      id => `spectrum_${id}: spectrum(id: ${id}) {
+    ...spectrumDetails
+  }`
+    )
+    .join("\n")
+  return gql`
+    query BatchSpectra{
+      ${f}
+    }
+
+    fragment spectrumDetails on Spectrum {
+      id
+      data
+      category
+      color
+      subtype
+      owner {
+        slug
+        name
+        id
+      }
+    }
+  `
+}
 
 const GET_SPECTRUM = gql`
   query Spectrum($id: Int!) {
@@ -12,10 +42,24 @@ const GET_SPECTRUM = gql`
         slug
         name
         id
+        ... on State {
+          ...FluorophoreParts
+        }
+        ... on Dye {
+          ...FluorophoreParts
+        }
       }
     }
   }
-`;
+
+  fragment FluorophoreParts on FluorophoreInterface {
+    qy
+    extCoeff
+    twopPeakgm
+    exMax
+    emMax
+  }
+`
 
 const SPECTRA_LIST = gql`
   {
@@ -26,10 +70,42 @@ const SPECTRA_LIST = gql`
       owner {
         name
         slug
-        url
+        # url
       }
     }
   }
-`;
+`
 
-export { GET_SPECTRUM, SPECTRA_LIST };
+const GET_ACTIVE_SPECTRA = gql`
+  query ActiveSpectra {
+    activeSpectra @client
+  }
+`
+
+const GET_CHART_OPTIONS = gql`
+  query ChartOptions {
+    chartOptions @client {
+      showY
+      showX
+      showGrid
+      logScale
+      scaleEC
+      scaleQY
+    }
+  }
+`
+
+const UPDATE_ACTIVE_SPECTRA = gql`
+  mutation updateActiveSpectra($activeSpectra: [String]!) {
+    updateActiveSpectra(activeSpectra: $activeSpectra) @client
+  }
+`
+
+export {
+  GET_SPECTRUM,
+  SPECTRA_LIST,
+  GET_ACTIVE_SPECTRA,
+  UPDATE_ACTIVE_SPECTRA,
+  batchSpectra,
+  GET_CHART_OPTIONS
+}
