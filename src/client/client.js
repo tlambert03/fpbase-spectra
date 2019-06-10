@@ -5,10 +5,12 @@ import { onError } from "apollo-link-error"
 import { ApolloLink } from "apollo-link"
 
 import { persistCache } from "apollo-cache-persist"
-import { defaults as data, resolvers } from "./resolvers"
+import { defaults, resolvers } from "./resolvers"
 import { typeDefs } from "./schema"
 import { IntrospectionFragmentMatcher } from "apollo-cache-inmemory"
 import introspectionQueryResultData from "../fragmentTypes.json"
+
+import qs from "qs"
 
 const fragmentMatcher = new IntrospectionFragmentMatcher({
   introspectionQueryResultData
@@ -39,7 +41,7 @@ const client = new ApolloClient({
   resolvers
 })
 
-cache.writeData({ data })
+cache.writeData({ data: defaults })
 
 // Populate from localstorage?
 const setupLocalStorage = async () => {
@@ -48,6 +50,52 @@ const setupLocalStorage = async () => {
     storage: window.sessionStorage
   })
 }
-setupLocalStorage()
+
+function parseURL() {
+  const url = qs.parse(window.location.search.replace(/^\?/, ""), {
+    decoder(str, decoder, charset) {
+      const strWithoutPlus = str.replace(/\+/g, " ")
+      if (charset === "iso-8859-1") {
+        // unescape never throws, no try...catch needed:
+        return strWithoutPlus.replace(/%[0-9a-f]{2}/gi, unescape)
+      }
+
+      if (/^(\d+|\d*\.\d+)$/.test(str)) {
+        return parseFloat(str)
+      }
+
+      const keywords = {
+        true: true,
+        false: false,
+        null: null,
+        undefined
+      }
+      if (str in keywords) {
+        return keywords[str]
+      }
+
+      // utf-8
+      try {
+        return decodeURIComponent(strWithoutPlus)
+      } catch (e) {
+        return strWithoutPlus
+      }
+    }
+  })
+  let data = {}
+
+  if ("s" in url || "activeSpectra" in url) {
+    let active = url["s"] || url["activeSpectra"]
+    if (!Array.isArray(active)) active = active.split(",")
+    data.activeSpectra = active.map(i => +i)
+  }
+  if ("opt" in url) {
+    data.chartOptions = url.opt
+  } else {
+  }
+  cache.writeData({ data })
+}
+
+setupLocalStorage().then(parseURL)
 
 export default client

@@ -5,7 +5,7 @@ import FormControlLabel from "@material-ui/core/FormControlLabel"
 import List from "@material-ui/core/List"
 import { useMutation, useQuery } from "react-apollo-hooks"
 import gql from "graphql-tag"
-import { GET_CHART_OPTIONS } from "../queries"
+import { GET_CHART_OPTIONS } from "../../client/queries"
 
 const toggleMut = param => gql`
 mutation Toggle${param} {

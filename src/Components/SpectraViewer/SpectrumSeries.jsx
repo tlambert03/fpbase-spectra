@@ -1,6 +1,6 @@
 import React, { memo } from "react"
 import { useQuery } from "react-apollo-hooks"
-import { GET_SPECTRUM } from "../queries"
+import { GET_SPECTRUM } from "../../client/queries"
 import { AreaSplineSeries } from "react-jsx-highcharts"
 
 const OD = num => (num <= 0 ? 10 : -Math.log10(num))

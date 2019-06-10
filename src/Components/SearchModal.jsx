@@ -7,7 +7,7 @@ import { customFilterOption } from "./util"
 import IntegrationReactSelect from "./IntegrationReactSelect"
 import { useMutation } from "react-apollo-hooks"
 
-import { gql } from "apollo-boost"
+import gql from "graphql-tag"
 
 function getModalStyle() {
   const top = 42

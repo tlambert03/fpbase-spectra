@@ -1,4 +1,4 @@
-import { gql } from "apollo-boost"
+import gql from "graphql-tag"
 
 export const defaults = {
   activeSpectra: [],
@@ -9,6 +9,7 @@ export const defaults = {
     logScale: false,
     scaleEC: false,
     scaleQY: false,
+    extremes: [null, null],
     __typename: "chartOptions"
   }
 }
@@ -48,6 +49,11 @@ export const resolvers = {
     },
     toggleScaleQY: (_root, variables, { cache }) => {
       return toggleChartOption(cache, "scaleQY")
+    },
+    setChartExtremes: (_root, { extremes }, { cache }) => {
+      const data = { chartOptions: { extremes, __typename: "extremes" } }
+      cache.writeData({ data })
+      return data
     },
     updateActiveSpectra: async (_, { activeSpectra }, { cache }) => {
       // const previous = cache.readQuery({ query: GET_ACTIVE_SPECTRA })

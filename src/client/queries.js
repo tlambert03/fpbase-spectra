@@ -1,5 +1,4 @@
-import { gql } from "apollo-boost"
-window.gql = gql
+import gql from "graphql-tag"
 
 const batchSpectra = ids => {
   const f = ids
@@ -91,6 +90,7 @@ const GET_CHART_OPTIONS = gql`
       logScale
       scaleEC
       scaleQY
+      extremes
     }
   }
 `

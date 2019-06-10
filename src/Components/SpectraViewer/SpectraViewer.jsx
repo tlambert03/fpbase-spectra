@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from "react"
+import React, { useEffect } from "react"
 import { useQuery } from "react-apollo-hooks"
-import { GET_ACTIVE_SPECTRA, GET_CHART_OPTIONS } from "../queries"
+import { GET_ACTIVE_SPECTRA, GET_CHART_OPTIONS } from "../../client/queries"
 import Highcharts from "highcharts"
 import {
   withHighcharts,
@@ -19,7 +19,6 @@ import applyExporting from "highcharts/modules/exporting"
 import applyExportingData from "highcharts/modules/export-data"
 import fixLogScale from "./fixLogScale"
 import DEFAULT_OPTIONS from "./ChartOptions"
-import ChartOptionsForm from "./ChartOptionsForm"
 import update from "immutability-helper"
 
 applyExporting(Highcharts)
@@ -56,13 +55,13 @@ const SpectraViewer = ({ spectraInfo }) => {
   const ids = activeSpectra.filter(i => i)
 
   return ids.length ? (
-    <div className="spectra-viewer">
+    <div className="spectra-viewer"  style={{position: 'relative'}}>
       <HighchartsChart
         plotOptions={plotOptions}
         navigation={navigation}
         exporting={exporting}
       >
-        <Chart {...chart} />
+        <Chart {...chart}/>
         <Legend {...legend} />
         <Tooltip {...tooltip} />
         <YAxis
@@ -99,10 +98,9 @@ const SpectraViewer = ({ spectraInfo }) => {
             ))}
         </YAxis>
 
-        <XAxisWithRange options={xAxis} />
+        <XAxisWithRange options={xAxis} initialRange={chartOptions.extremes} />
         <MyCredits axisId="yAx2">fpbase.org</MyCredits>
       </HighchartsChart>
-      <ChartOptionsForm />
     </div>
   ) : null
 }
@@ -111,8 +109,9 @@ const MyCredits = provideAxis(function MyCredits({ getAxis, getHighcharts }) {
   useEffect(() => {
     const axis = getAxis()
     function shiftCredits() {
+      const yShift = axis.object.chart.get("xAxis").axisTitleMargin
       axis.object.chart.credits.update({
-        position: { x: -25 - axis.object.axisTitleMargin }
+        position: { y: -25 - yShift, x: -25 - axis.object.axisTitleMargin }
       })
     }
     const Highcharts = getHighcharts()
@@ -123,13 +122,13 @@ const MyCredits = provideAxis(function MyCredits({ getAxis, getHighcharts }) {
   return <Credits position={{ y: -45 }}>fpbase.org</Credits>
 })
 
-export const XAxisWithRange = ({ options }) => {
+export const XAxisWithRange = ({ options, initialRange}) => {
   return (
     <>
       <XAxis {...options} id="xAxis">
         <XAxis.Title style={{ display: "none" }}>Wavelength</XAxis.Title>
       </XAxis>
-      {options.labels.enabled && <XRangePickers axisId="xAxis" />}
+      <XRangePickers axisId="xAxis" initialRange={initialRange} visible={options.labels.enabled}/>
     </>
   )
 }

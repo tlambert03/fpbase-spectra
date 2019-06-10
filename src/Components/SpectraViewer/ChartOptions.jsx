@@ -86,8 +86,8 @@ const DEFAULT_OPTIONS = {
           "separator",
           "downloadCSV",
           "printChart",
-          "separator",
-          "reset"
+          //"separator",
+          //"reset"
           // "openInCloud"
           // "viewData"
         ]
@@ -96,8 +96,8 @@ const DEFAULT_OPTIONS = {
   },
   legend: {
     verticalAlign: "top",
-    align: "right",
-    x: -40,
+    align: "left",
+    x: -10,
     y: -1,
     itemStyle: {
       fontWeight: 600,

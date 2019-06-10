@@ -1,17 +1,18 @@
 import React, { useState, useMemo, useEffect } from "react"
-import ReactDOM from "react-dom"
 import { useQuery, useMutation } from "react-apollo-hooks"
 import {
   SPECTRA_LIST,
   GET_ACTIVE_SPECTRA,
+  GET_CHART_OPTIONS,
   UPDATE_ACTIVE_SPECTRA
-} from "./queries"
+} from "./client/queries"
 import { ApolloProvider } from "react-apollo-hooks"
-import client from "./client"
-import { reshapeSpectraInfo } from "./util"
-import QuickEntry from "./QuickEntry"
-import SpectraViewer from "./SpectraViewer/SpectraViewer";
-
+import client from "./client/client"
+import { reshapeSpectraInfo } from "./Components/util"
+import QuickEntry from "./Components/QuickEntry"
+import SpectraViewer from "./Components/SpectraViewer/SpectraViewer"
+import updateUrl from "./Components/stateToUrl"
+import ChartOptionsForm from "./Components/SpectraViewer/ChartOptionsForm"
 
 const Current = () => {
   const {
@@ -67,29 +68,48 @@ const Current = () => {
     />
   )
 }
+
 const App = () => {
   const { data, loading } = useQuery(SPECTRA_LIST)
-  const { owners, spectraInfo } = useMemo(() => reshapeSpectraInfo(data.spectra), [
-    data.spectra
-  ])
+  const { owners, spectraInfo } = useMemo(
+    () => reshapeSpectraInfo(data.spectra),
+    [data.spectra]
+  )
 
   return (
     <>
       {loading ? "App loading" : ""}
       {spectraInfo && <SpectraViewer spectraInfo={spectraInfo} />}
+      {!loading && <ChartOptionsForm />}
       {owners && <QuickEntry options={Object.values(owners)} />}
       <Current />
+      <UrlUpdater loading={loading} />
     </>
   )
 }
 
-const initReactSpectra = elem => {
-  ReactDOM.render(
-    <ApolloProvider client={client}>
-      <App />
-    </ApolloProvider>,
-    document.getElementById(elem)
+const UrlUpdater = ({ loading }) => {
+  const {
+    data: { activeSpectra }
+  } = useQuery(GET_ACTIVE_SPECTRA)
+  const {
+    data: { chartOptions }
+  } = useQuery(GET_CHART_OPTIONS)
+  const qstring = useMemo(
+    () => updateUrl(activeSpectra, chartOptions, loading),
+    [activeSpectra, chartOptions, loading]
+  )
+  return (
+    <button onClick={() => window.history.pushState({}, null, qstring)}>
+      CLICK
+    </button>
   )
 }
 
-export default initReactSpectra
+const AppWrapper = () => (
+  <ApolloProvider client={client}>
+    <App />
+  </ApolloProvider>
+)
+
+export default AppWrapper

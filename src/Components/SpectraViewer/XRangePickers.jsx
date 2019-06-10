@@ -1,49 +1,73 @@
 import React, { useState, useEffect, useRef } from "react"
+import { useMutation } from "react-apollo-hooks"
 import { provideAxis } from "react-jsx-highcharts"
 import Input from "@material-ui/core/Input"
+import gql from "graphql-tag"
+import { debounce } from "../util"
 
 const CLASSES = {
   minInput: {
     fontWeight: "bold",
     fontSize: "0.75rem",
     width: 30,
-    left: 0,
-    color: "#99121F"
+    color: "#99121F",
+    position: "absolute",
   },
   maxInput: {
-    float: "right",
+    position: "absolute",
     fontWeight: "bold",
     fontSize: "0.75rem",
     width: 30,
-    right: 0,
     color: "#99121F"
   }
 }
 
-const XRangePickers = ({ getAxis, getHighcharts }) => {
-  const [{ min, max }, setState] = useState({ min: "", max: "" })
+const MUTATE_CHART_EXTREMES = gql`
+  mutation SetChartExtremes($extremes: [Float]!) {
+    setChartExtremes(extremes: $extremes) @client
+  }
+`
+
+const XRangePickers = ({ getAxis, getHighcharts, initialRange, visible }) => {
+  const [[min, max], setState] = useState(initialRange || [null, null])
   const axis = getAxis()
   const minNode = useRef()
   const maxNode = useRef()
+  const mutateExtremes = useMutation(MUTATE_CHART_EXTREMES)
 
   useEffect(() => {
+    if (min || max) {
+      axis.setExtremes(min, max)
+      if (min && max) {
+        axis.object.chart.showResetZoom()
+      }
+    }
+  }, []) // eslint-disable-line
 
+  useEffect(() => {
     function handleAfterSetExtremes(e) {
-      if (e) setState({ min: e.userMin && e.min, max: e.userMax && e.max })
+      e && setState([e.userMin && e.min, e.userMax && e.max])
+    }
+
+    function updateStore(e) {
+      if (e) {
+        const extremes = [e.userMin && e.min, e.userMax && e.max]
+        mutateExtremes({ variables: { extremes } })
+      }
     }
 
     function hideEdgeLabels(e) {
       if (axis.object.labelGroup && minNode.current) {
-        let leftPad = 0
-        if (axis.object.chart.get('yAx1')){
-          leftPad = +axis.object.chart.get('yAx1').axisTitleMargin
+        let leftPad = -5
+        if (axis.object.chart.get("yAx1")) {
+          leftPad += +axis.object.chart.get("yAx1").axisTitleMargin
         }
         let rightPad = 0
-        if (axis.object.chart.get('yAx2')){
-          rightPad = -axis.object.chart.get('yAx2').axisTitleMargin
+        if (axis.object.chart.get("yAx2")) {
+          rightPad += +axis.object.chart.get("yAx2").axisTitleMargin
         }
         minNode.current.parentElement.style.left = `${leftPad}px`
-        maxNode.current.parentElement.style.left = `${rightPad}px`
+        maxNode.current.parentElement.style.right = `${rightPad}px`
         axis.object.labelGroup.element.childNodes.forEach(
           node => (node.style.display = "block")
         )
@@ -54,7 +78,7 @@ const XRangePickers = ({ getAxis, getHighcharts }) => {
               Math.abs(node.textContent - min),
               Math.abs(node.textContent - max)
             ) <
-            axis.object.tickInterval / 2
+            0.4 * axis.object.tickInterval
           ) {
             node.style.display = "none"
           }
@@ -64,6 +88,11 @@ const XRangePickers = ({ getAxis, getHighcharts }) => {
 
     const Highcharts = getHighcharts()
     Highcharts.addEvent(axis.object, "afterSetExtremes", handleAfterSetExtremes)
+    Highcharts.addEvent(
+      axis.object,
+      "afterSetExtremes",
+      debounce(updateStore, 200)
+    )
     Highcharts.addEvent(axis.object.chart, "redraw", hideEdgeLabels)
     handleAfterSetExtremes()
     hideEdgeLabels()
@@ -73,14 +102,20 @@ const XRangePickers = ({ getAxis, getHighcharts }) => {
         "afterSetExtremes",
         handleAfterSetExtremes
       )
+      Highcharts.removeEvent(
+        getAxis().object,
+        "afterSetExtremes",
+        debounce(updateStore, 100)
+      )
     }
   }, []) // eslint-disable-line
 
   const updateRange = () => {
-    axis.setExtremes(
+    const extremes = [
       +minNode.current.value || null,
       +maxNode.current.value || null
-    )
+    ]
+    axis.setExtremes(...extremes)
   }
   const handleKeyPress = e => {
     if (e.key === "Enter") {
@@ -93,7 +128,12 @@ const XRangePickers = ({ getAxis, getHighcharts }) => {
   return (
     <div
       className="x-range-pickers"
-      style={{ height: 0, position: "relative", bottom: 38 }}
+      style={{
+        height: 0,
+        position: "relative",
+        bottom: 38,
+        display: visible ? "block" : "none"
+      }}
     >
       <Input
         name="min"
@@ -101,7 +141,7 @@ const XRangePickers = ({ getAxis, getHighcharts }) => {
         placeholder={`${extremes.dataMin}`}
         value={Math.round(min) || ""}
         inputRef={minNode}
-        onChange={e => setState({ max, min: e.target.value })}
+        onChange={e => setState([e.target.value, max])}
         onKeyPress={handleKeyPress}
         onBlur={updateRange}
         style={CLASSES.minInput}
@@ -113,7 +153,7 @@ const XRangePickers = ({ getAxis, getHighcharts }) => {
         placeholder={`${extremes.dataMax}`}
         value={Math.round(max) || ""}
         inputRef={maxNode}
-        onChange={e => setState({ min, max: e.target.value })}
+        onChange={e => setState([min, e.target.value])}
         onKeyPress={handleKeyPress}
         onBlur={updateRange}
         style={CLASSES.maxInput}
