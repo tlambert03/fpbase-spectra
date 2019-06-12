@@ -14,24 +14,25 @@
 
 // const emptyFormSelector = () => ({ id: ID(), value: null })
 
-// const getStorageWithExpire = (cacheKey, expiry) => {
-//   const cached = localStorage.getItem(cacheKey)
-//   const whenCached = localStorage.getItem(`${cacheKey}:ts`)
-//   if (cached !== null && whenCached !== null) {
-//     // it was in sessionStorage! Yay!
-//     // Even though 'whenCached' is a string, this operation
-//     // works because the minus sign converts the
-//     // string to an integer and it will work.
-//     const age = (Date.now() - whenCached) / 1000
-//     if (age < expiry) {
-//       return cached
-//     }
-//     // We need to clean up this old key
-//     localStorage.removeItem(cacheKey)
-//     localStorage.removeItem(`${cacheKey}:ts`)
-//   }
-//   return null
-// }
+const getStorageWithExpire = (cacheKey, expiry = 12 * 60 * 60) => {
+  const cached = localStorage.getItem(cacheKey)
+  const whenCached = localStorage.getItem(`${cacheKey}:ts`)
+  if (cached !== null && whenCached !== null) {
+    const age = (Date.now() - whenCached) / 1000
+    if (age < expiry) {
+      return JSON.parse(cached)
+    }
+    // We need to clean up this old key
+    localStorage.removeItem(cacheKey)
+    localStorage.removeItem(`${cacheKey}:ts`)
+  }
+  return null
+}
+
+const setStorageWithTimeStamp = (cacheKey, value) => {
+  localStorage.setItem(cacheKey, JSON.stringify(value))
+  localStorage.setItem(`${cacheKey}:ts`, Date.now())
+}
 
 // const getCachedSpectrum = async (id, options) => {
 //   let expiry = DEFAULT_EXPIRY // 10 min default
@@ -140,4 +141,40 @@ function reshapeSpectraInfo(arr) {
   )
 }
 
-export { debounce, customFilterOption, reshapeSpectraInfo }
+function decoder(str, decoder, charset) {
+  const strWithoutPlus = str.replace(/\+/g, " ")
+  if (charset === "iso-8859-1") {
+    // unescape never throws, no try...catch needed:
+    return strWithoutPlus.replace(/%[0-9a-f]{2}/gi, unescape)
+  }
+
+  if (/^(\d+|\d*\.\d+)$/.test(str)) {
+    return str
+    //return parseFloat(str)
+  }
+
+  const keywords = {
+    true: true,
+    false: false,
+    null: null,
+    undefined
+  }
+  if (str in keywords) {
+    return keywords[str]
+  }
+
+  // utf-8
+  try {
+    return decodeURIComponent(strWithoutPlus)
+  } catch (e) {
+    return strWithoutPlus
+  }
+}
+export {
+  debounce,
+  customFilterOption,
+  reshapeSpectraInfo,
+  decoder,
+  getStorageWithExpire,
+  setStorageWithTimeStamp
+}

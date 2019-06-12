@@ -1,4 +1,4 @@
-import React, { useContext } from "react"
+import React from "react"
 import PropTypes from "prop-types"
 import Box from "@material-ui/core/Box"
 import IconButton from "@material-ui/core/IconButton"
@@ -7,7 +7,6 @@ import DeleteIcon from "@material-ui/icons/Delete"
 import AddIcon from "@material-ui/icons/Add"
 import { makeStyles } from "@material-ui/core/styles"
 import SpectrumSelector from "./SpectrumSelector"
-import { StateContext, DispatchContext } from "./Store"
 
 const useStyles = makeStyles(() => ({
   button: {
@@ -27,24 +26,15 @@ const SpectrumSelectGroup = React.memo(function SpectrumSelectGroup({
   selectors,
   options
 }) {
-  const dispatch = useContext(DispatchContext)
   const classes = useStyles()
-
-  const addRow = () => {
-    dispatch({ type: "ADD_FORM_ROW", category })
-  }
-
-  const removeRow = id => {
-    dispatch({ type: "REMOVE_FORM_ROW", category, id })
-  }
-
-  console.log("SpectrumSelectGroup rendered")
-  // if (!formState[category]) addRow(category);
 
   if (!(selectors && selectors.length)) {
     return <></>
   }
 
+  const removeRow = (i) => {console.log(i)}
+  const addRow = () => {console.log()}
+  
   return (
     <>
       {selectors.map(selector => (
@@ -89,8 +79,6 @@ const SpectrumSelectGroup = React.memo(function SpectrumSelectGroup({
     </>
   )
 })
-
-SpectrumSelectGroup.whyDidYouRender = true
 
 SpectrumSelectGroup.propTypes = {
   category: PropTypes.string.isRequired,

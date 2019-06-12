@@ -24,6 +24,7 @@ const batchSpectra = ids => {
         slug
         name
         id
+        url
       }
     }
   `
@@ -69,7 +70,7 @@ const SPECTRA_LIST = gql`
       owner {
         name
         slug
-        # url
+        url
       }
     }
   }
@@ -78,6 +79,12 @@ const SPECTRA_LIST = gql`
 const GET_ACTIVE_SPECTRA = gql`
   query ActiveSpectra {
     activeSpectra @client
+  }
+`
+
+const GET_ACTIVE_OWNERS = gql`
+  query ActiveOwners {
+    activeOwners @client
   }
 `
 
@@ -91,13 +98,32 @@ const GET_CHART_OPTIONS = gql`
       scaleEC
       scaleQY
       extremes
+      shareTooltip
     }
   }
 `
 
+const SET_ACTIVE_SPECTRA = gql`
+  mutation setActiveSpectra($activeSpectra: [String]!) {
+    setActiveSpectra(activeSpectra: $activeSpectra) @client
+  }
+`
+
 const UPDATE_ACTIVE_SPECTRA = gql`
-  mutation updateActiveSpectra($activeSpectra: [String]!) {
-    updateActiveSpectra(activeSpectra: $activeSpectra) @client
+  mutation updateActiveSpectra($add: [String], $remove: [String]) {
+    updateActiveSpectra(add: $add, remove: $remove) @client
+  }
+`
+
+const UPDATE_ACTIVE_OWNERS = gql`
+  mutation updateActiveOwners($add: [String], $remove: [String]) {
+    updateActiveOwners(add: $add, remove: $remove) @client
+  }
+`
+
+const GET_OWNER_OPTIONS = gql`
+  {
+    excludeSubtypes @client
   }
 `
 
@@ -105,7 +131,11 @@ export {
   GET_SPECTRUM,
   SPECTRA_LIST,
   GET_ACTIVE_SPECTRA,
+  SET_ACTIVE_SPECTRA,
   UPDATE_ACTIVE_SPECTRA,
   batchSpectra,
-  GET_CHART_OPTIONS
+  GET_ACTIVE_OWNERS,
+  UPDATE_ACTIVE_OWNERS,
+  GET_CHART_OPTIONS,
+  GET_OWNER_OPTIONS
 }

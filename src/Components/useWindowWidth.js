@@ -1,22 +1,15 @@
 import { useState, useEffect } from "react"
-
+import { debounce } from "../util"
 const useWindowWidth = delay => {
   const [width, setWidth] = useState(window.innerWidth)
-  const [changing, setChanging] = useState(false)
 
   useEffect(() => {
     const handleResize = () => {
-      if (!changing){
-        setChanging(true)
-        setTimeout(() => {
-          setWidth(window.innerWidth)
-          setChanging(false)
-        }, delay)
-      }
+      setWidth(window.innerWidth)
     }
-    window.addEventListener("resize", handleResize)
+    window.addEventListener("resize", debounce(handleResize, 40))
     return () => {
-      window.removeEventListener("resize", handleResize)
+      window.removeEventListener("resize", debounce(handleResize, 40))
     }
   })
 

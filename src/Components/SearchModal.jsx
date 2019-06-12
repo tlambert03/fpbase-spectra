@@ -3,11 +3,11 @@ import PropTypes from "prop-types"
 import Modal from "@material-ui/core/Modal"
 import Typography from "@material-ui/core/Typography"
 import { makeStyles } from "@material-ui/core/styles"
-import { customFilterOption } from "./util"
+import { customFilterOption } from "../util"
 import IntegrationReactSelect from "./IntegrationReactSelect"
-import { useMutation } from "react-apollo-hooks"
+import { useMutation, useQuery } from "react-apollo-hooks"
 
-import gql from "graphql-tag"
+import { UPDATE_ACTIVE_SPECTRA, GET_OWNER_OPTIONS } from "../client/queries"
 
 function getModalStyle() {
   const top = 42
@@ -31,12 +31,6 @@ const useStyles = makeStyles(theme => ({
     outline: "none"
   }
 }))
-
-const UPDATE_SPECTRA = gql`
-  mutation updateActiveSpectra($spectra: [Int]!) {
-    updateActiveSpectra(activeSpectra: $spectra) @client
-  }
-`
 
 const SearchModal = ({ options, open, setOpen }) => {
   const [modalStyle] = useState(getModalStyle)
@@ -68,11 +62,23 @@ const SearchModal = ({ options, open, setOpen }) => {
     }
   }, [setOpen])
 
-  const updateSpectra = useMutation(UPDATE_SPECTRA)
+  const updateSpectra = useMutation(UPDATE_ACTIVE_SPECTRA)
+  //const updateOwners = useMutation(UPDATE_ACTIVE_OWNERS)
+
+  const {
+    data: { excludeSubtypes }
+  } = useQuery(GET_OWNER_OPTIONS)
 
   const handleChange = event => {
-    const spectra = event && event.spectra.map(({ id }) => id)
-    if (spectra) updateSpectra({ variables: { spectra } })
+    const spectra =
+      event &&
+      event.spectra
+        .filter(({ subtype }) => !excludeSubtypes.includes(subtype))
+        .map(({ id }) => id)
+
+    if (spectra) {
+      updateSpectra({ variables: { add: spectra } })
+    }
     setOpen(false)
   }
   return (

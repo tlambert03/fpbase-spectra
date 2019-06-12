@@ -1,109 +1,75 @@
-import React, { useState, useMemo, useEffect } from "react"
-import { useQuery, useMutation } from "react-apollo-hooks"
+import React, { useState, useEffect } from "react"
+import { useQuery, useApolloClient } from "react-apollo-hooks"
 import {
   SPECTRA_LIST,
   GET_ACTIVE_SPECTRA,
-  GET_CHART_OPTIONS,
-  UPDATE_ACTIVE_SPECTRA
-} from "./client/queries"
+  GET_CHART_OPTIONS} from "./client/queries"
 import { ApolloProvider } from "react-apollo-hooks"
 import client from "./client/client"
-import { reshapeSpectraInfo } from "./Components/util"
+import {
+  reshapeSpectraInfo,
+  getStorageWithExpire,
+  setStorageWithTimeStamp
+} from "./util"
 import QuickEntry from "./Components/QuickEntry"
-import SpectraViewer from "./Components/SpectraViewer/SpectraViewer"
-import updateUrl from "./Components/stateToUrl"
-import ChartOptionsForm from "./Components/SpectraViewer/ChartOptionsForm"
+import { SpectraViewer, ChartOptionsForm } from "./Components/SpectraViewer"
+import stateToUrl from "./Components/stateToUrl"
+import OwnerGroup from "./Components/OwnerGroup"
+import OwnerOptionsForm from "./Components/OwnerOptionsForm"
 
-const Current = () => {
-  const {
-    loading,
-    data: { activeSpectra }
-  } = useQuery(GET_ACTIVE_SPECTRA)
-  const updateSpectra = useMutation(UPDATE_ACTIVE_SPECTRA)
-  const [value, setValue] = useState("")
+const useStashedSpectraInfo = spectra => {
+  const cacheKey = "_FPbaseSpectraStash"
+  const [stash, setStash] = useState(getStorageWithExpire(cacheKey))
+  const { data, loading } = useQuery(SPECTRA_LIST)
 
   useEffect(() => {
-    setValue(activeSpectra.join(", "))
-  }, [activeSpectra])
-
-  const handleKey = e => {
-    if (e.key !== "Enter") {
-      return
+    if(!loading && data.spectra){
+      const _stash = reshapeSpectraInfo(data.spectra)
+      setStash(_stash)
+      setStorageWithTimeStamp(cacheKey, _stash)
     }
-    e.preventDefault()
+  }, [data.spectra, loading])
 
-    const newVal = e.target.value
-      .split(",")
-      .map(i => i.trim())
-      .filter(i => i)
-    updateSpectra({
-      variables: {
-        activeSpectra: newVal
-      },
-      update: (
-        cache,
-        {
-          data: {
-            updateActiveSpectra: { activeSpectra }
-          }
-        }
-      ) => {
-        setValue(activeSpectra.join(", "))
-      }
-    })
-  }
-  const handleChange = e => {
-    setValue(e.target.value)
-  }
-  if (loading) {
-    return <></>
-  }
-  return (
-    <input
-      type="text"
-      value={value}
-      style={{ width: "80%" }}
-      onKeyPress={handleKey}
-      onChange={handleChange}
-    />
-  )
+  return { ...stash }
 }
 
 const App = () => {
-  const { data, loading } = useQuery(SPECTRA_LIST)
-  const { owners, spectraInfo } = useMemo(
-    () => reshapeSpectraInfo(data.spectra),
-    [data.spectra]
-  )
+  const { owners, spectraInfo } = useStashedSpectraInfo()
 
   return (
     <>
-      {loading ? "App loading" : ""}
-      {spectraInfo && <SpectraViewer spectraInfo={spectraInfo} />}
-      {!loading && <ChartOptionsForm />}
+      <SpectraViewer spectraInfo={spectraInfo} />
+      <ChartOptionsForm />
+      <OwnerOptionsForm />
       {owners && <QuickEntry options={Object.values(owners)} />}
-      <Current />
-      <UrlUpdater loading={loading} />
+
+      {spectraInfo && (
+        <OwnerGroup owners={owners} spectraInfo={spectraInfo}></OwnerGroup>
+      )}
+      <UrlUpdater />
     </>
   )
 }
 
 const UrlUpdater = ({ loading }) => {
-  const {
-    data: { activeSpectra }
-  } = useQuery(GET_ACTIVE_SPECTRA)
-  const {
-    data: { chartOptions }
-  } = useQuery(GET_CHART_OPTIONS)
-  const qstring = useMemo(
-    () => updateUrl(activeSpectra, chartOptions, loading),
-    [activeSpectra, chartOptions, loading]
-  )
-  return (
-    <button onClick={() => window.history.pushState({}, null, qstring)}>
-      CLICK
-    </button>
-  )
+  const client = useApolloClient()
+
+  const handleClick = () => {
+    async function pushHistory() {
+      const {
+        data: { activeSpectra }
+      } = await client.query({ query: GET_ACTIVE_SPECTRA })
+      const {
+        data: { chartOptions }
+      } = await client.query({ query: GET_CHART_OPTIONS })
+      const qstring = stateToUrl(activeSpectra, chartOptions, loading)
+
+      window.history.pushState({}, null, qstring)
+    }
+    pushHistory()
+  }
+
+  return <button onClick={handleClick}>CLICK</button>
 }
 
 const AppWrapper = () => (

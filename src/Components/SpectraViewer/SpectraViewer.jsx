@@ -1,6 +1,10 @@
-import React, { useEffect } from "react"
-import { useQuery } from "react-apollo-hooks"
-import { GET_ACTIVE_SPECTRA, GET_CHART_OPTIONS } from "../../client/queries"
+import React, { useEffect, memo, useState } from "react"
+import { useQuery, useApolloClient } from "react-apollo-hooks"
+import {
+  GET_ACTIVE_SPECTRA,
+  GET_CHART_OPTIONS,
+  GET_SPECTRUM
+} from "../../client/queries"
 import Highcharts from "highcharts"
 import {
   withHighcharts,
@@ -16,16 +20,27 @@ import XRangePickers from "./XRangePickers"
 import { XAxis } from "react-jsx-highcharts"
 import SpectrumSeries from "./SpectrumSeries"
 import applyExporting from "highcharts/modules/exporting"
+import applyPatterns from "highcharts/modules/pattern-fill"
 import applyExportingData from "highcharts/modules/export-data"
 import fixLogScale from "./fixLogScale"
 import DEFAULT_OPTIONS from "./ChartOptions"
 import update from "immutability-helper"
+import NoData from "./NoData"
+import useWindowWidth from "../useWindowWidth"
 
 applyExporting(Highcharts)
 applyExportingData(Highcharts)
+applyPatterns(Highcharts)
 fixLogScale(Highcharts)
 
-const SpectraViewer = ({ spectraInfo }) => {
+const calcHeight = width => {
+  if (width < 650) return 235
+  if (width < 900) return 325
+  if (width < 1200) return 375
+  return 425
+}
+
+const SpectraViewerContainer = ({ spectraInfo }) => {
   const {
     data: { activeSpectra }
   } = useQuery(GET_ACTIVE_SPECTRA)
@@ -51,17 +66,63 @@ const SpectraViewer = ({ spectraInfo }) => {
     labels: { enabled: { $set: chartOptions.showX } },
     gridLineWidth: { $set: chartOptions.showGrid ? 1 : 0 }
   })
+  tooltip.shared = chartOptions.shareTooltip
 
-  const ids = activeSpectra.filter(i => i)
+  const [data, setData] = useState([])
+  const client = useApolloClient()
+  useEffect(() => {
+    async function fetchData() {
+      const _data = await Promise.all(
+        activeSpectra
+          .filter(i => i)
+          .map(id => client.query({ query: GET_SPECTRUM, variables: { id } }))
+      )
+      setData(_data.map(({ data }) => data.spectrum))
+    }
+    fetchData()
+  }, [activeSpectra, client])
 
-  return ids.length ? (
-    <div className="spectra-viewer"  style={{position: 'relative'}}>
+  return (
+    <SpectraViewer
+      data={data}
+      plotOptions={plotOptions}
+      navigation={navigation}
+      exporting={exporting}
+      chart={chart}
+      legend={legend}
+      tooltip={tooltip}
+      yAxis={yAxis}
+      xAxis={xAxis}
+      chartOptions={chartOptions}
+    />
+  )
+}
+
+const SpectraViewer = memo(function SpectraViewer({
+  data,
+  plotOptions,
+  navigation,
+  exporting,
+  chart,
+  legend,
+  tooltip,
+  yAxis,
+  xAxis,
+  chartOptions
+}) {
+  const windowWidth = useWindowWidth()
+  const height = calcHeight(windowWidth)
+
+  const numSpectra = data.length
+  return (
+    <div className="spectra-viewer" style={{ position: "relative" }}>
+      {numSpectra === 0 && <NoData height={height} />}
       <HighchartsChart
         plotOptions={plotOptions}
         navigation={navigation}
         exporting={exporting}
       >
-        <Chart {...chart}/>
+        <Chart {...chart} height={height} />
         <Legend {...legend} />
         <Tooltip {...tooltip} />
         <YAxis
@@ -70,12 +131,11 @@ const SpectraViewer = ({ spectraInfo }) => {
           reversed={chartOptions.logScale}
           max={chartOptions.logScale ? 6 : 1}
           min={0}
+          endOnTick={chartOptions.scaleEC}
         >
-          {ids
-            .filter(i => spectraInfo[i] && spectraInfo[i].subtype !== "EX")
-            .map(id => (
-              <SpectrumSeries key={id} id={id} {...chartOptions} />
-            ))}
+          {data.filter(i => i.subtype !== 'EX').map(spectrum => (
+            <SpectrumSeries spectrum={spectrum} key={spectrum.id} {...chartOptions} />
+          ))}
         </YAxis>
         <YAxis
           id="yAx2"
@@ -86,24 +146,24 @@ const SpectraViewer = ({ spectraInfo }) => {
             style: { fontWeight: 600 }
           }}
           opposite
+          gridLineWidth={chartOptions.scaleEC && chartOptions.showGrid}
           maxPadding={0.0}
           reversed={chartOptions.logScale}
           max={chartOptions.scaleEC ? null : chartOptions.logScale ? 6 : 1}
           min={0}
+          endOnTick={chartOptions.scaleEC}
         >
-          {ids
-            .filter(i => spectraInfo[i] && spectraInfo[i].subtype === "EX")
-            .map(id => (
-              <SpectrumSeries key={id} id={id} {...chartOptions} />
-            ))}
+          {data.filter(i => i.subtype === 'EX').map(spectrum => (
+            <SpectrumSeries spectrum={spectrum} key={spectrum.id} {...chartOptions} />
+          ))}
         </YAxis>
 
-        <XAxisWithRange options={xAxis} initialRange={chartOptions.extremes} />
+        <XAxisWithRange options={xAxis} showPickers={numSpectra > 0} />
         <MyCredits axisId="yAx2">fpbase.org</MyCredits>
       </HighchartsChart>
     </div>
-  ) : null
-}
+  )
+})
 
 const MyCredits = provideAxis(function MyCredits({ getAxis, getHighcharts }) {
   useEffect(() => {
@@ -122,15 +182,18 @@ const MyCredits = provideAxis(function MyCredits({ getAxis, getHighcharts }) {
   return <Credits position={{ y: -45 }}>fpbase.org</Credits>
 })
 
-export const XAxisWithRange = ({ options, initialRange}) => {
+export const XAxisWithRange = ({ options, showPickers }) => {
   return (
     <>
       <XAxis {...options} id="xAxis">
         <XAxis.Title style={{ display: "none" }}>Wavelength</XAxis.Title>
       </XAxis>
-      <XRangePickers axisId="xAxis" initialRange={initialRange} visible={options.labels.enabled}/>
+      <XRangePickers
+        axisId="xAxis"
+        visible={showPickers && options.labels.enabled}
+      />
     </>
   )
 }
 
-export default withHighcharts(SpectraViewer, Highcharts)
+export default withHighcharts(SpectraViewerContainer, Highcharts)

@@ -1,11 +1,9 @@
 import React, { memo } from "react"
-import Checkbox from "@material-ui/core/Checkbox"
-import MUIListItem from "@material-ui/core/ListItem"
-import FormControlLabel from "@material-ui/core/FormControlLabel"
 import List from "@material-ui/core/List"
 import { useMutation, useQuery } from "react-apollo-hooks"
 import gql from "graphql-tag"
 import { GET_CHART_OPTIONS } from "../../client/queries"
+import { ListCheckbox } from "../ListCheckbox";
 
 const toggleMut = param => gql`
 mutation Toggle${param} {
@@ -20,6 +18,7 @@ const ChartOptionsForm = memo(function ChartOptionsForm({ options }) {
   const toggleLogScale = useMutation(toggleMut("LogScale"))
   const toggleScaleEC = useMutation(toggleMut("ScaleEC"))
   const toggleScaleQY = useMutation(toggleMut("ScaleQY"))
+  const toggleShareTooltip = useMutation(toggleMut("ShareTooltip"))
   const {
     data: { chartOptions }
   } = useQuery(GET_CHART_OPTIONS)
@@ -61,25 +60,13 @@ const ChartOptionsForm = memo(function ChartOptionsForm({ options }) {
         value="labels"
         name="Scale Emission to Quantum Yield"
       />
+      <ListCheckbox
+        onCheckItem={toggleShareTooltip}
+        checked={chartOptions.shareTooltip}
+        value="labels"
+        name="Share Tooltip (on hover)"
+      />
     </List>
   )
 })
-const ListCheckbox = memo(function ListCheckbox({
-  onCheckItem,
-  name,
-  value,
-  checked
-}) {
-  return (
-    <MUIListItem>
-      <FormControlLabel
-        control={
-          <Checkbox onChange={onCheckItem} checked={checked} value={value} />
-        }
-        label={name}
-      />
-    </MUIListItem>
-  )
-})
-
 export default ChartOptionsForm

@@ -1,14 +1,14 @@
-import React, { useState } from "react";
-import Select, { components } from "react-select";
-import { makeStyles, useTheme } from "@material-ui/core/styles";
-import Typography from "@material-ui/core/Typography";
-import NoSsr from "@material-ui/core/NoSsr";
-import TextField from "@material-ui/core/TextField";
-import Paper from "@material-ui/core/Paper";
-import MenuItem from "@material-ui/core/MenuItem";
-import PropTypes from "prop-types";
-import Icon from "@material-ui/core/Icon";
-import { customFilterOption } from "./util";
+import React, { useState } from "react"
+import Select, { components } from "react-select"
+import { makeStyles, useTheme } from "@material-ui/core/styles"
+import Typography from "@material-ui/core/Typography"
+import NoSsr from "@material-ui/core/NoSsr"
+import TextField from "@material-ui/core/TextField"
+import Paper from "@material-ui/core/Paper"
+import MenuItem from "@material-ui/core/MenuItem"
+import PropTypes from "prop-types"
+import { customFilterOption } from "../util"
+import { categoryIcon } from "./FaIcon"
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -50,7 +50,7 @@ const useStyles = makeStyles(theme => ({
   divider: {
     height: theme.spacing(2)
   }
-}));
+}))
 
 function NoOptionsMessage({ selectProps, innerProps, children }) {
   return (
@@ -61,22 +61,22 @@ function NoOptionsMessage({ selectProps, innerProps, children }) {
     >
       {children}
     </Typography>
-  );
+  )
 }
 
 NoOptionsMessage.propTypes = {
   children: PropTypes.node,
   innerProps: PropTypes.object,
   selectProps: PropTypes.object.isRequired
-};
+}
 
 function inputComponent({ inputRef, ...props }) {
-  return <div ref={inputRef} {...props} />;
+  return <div ref={inputRef} {...props} />
 }
 
 inputComponent.propTypes = {
   inputRef: PropTypes.oneOfType([PropTypes.func, PropTypes.object])
-};
+}
 
 function Control({ selectProps, innerRef, innerProps, children }) {
   return (
@@ -93,7 +93,7 @@ function Control({ selectProps, innerRef, innerProps, children }) {
       }}
       {...selectProps.TextFieldProps}
     />
-  );
+  )
 }
 
 Control.propTypes = {
@@ -101,59 +101,19 @@ Control.propTypes = {
   innerProps: PropTypes.object,
   innerRef: PropTypes.oneOfType([PropTypes.func, PropTypes.object]),
   selectProps: PropTypes.object.isRequired
-};
+}
 
 const Option = props => {
-  const myProps = { ...props };
-  let iconClass = "far fa-circle";
-  switch (props.data.category) {
-    case "P":
-      iconClass = "far fa-sun";
-      break;
-    case "D":
-      iconClass = "fa fa-sun";
-      break;
-    case "F":
-      iconClass = "fas fa-adjust";
-      break;
-    case "L":
-      iconClass = "fas fa-lightbulb";
-      break;
-    case "C":
-      iconClass = "fas fa-camera";
-      break;
-    default:
-      iconClass = "far fa-circle";
-      break;
-  }
+  const myProps = { ...props }
 
   myProps.children = (
     <>
-      <Icon
-        style={{ fontSize: "1rem", marginRight: 8, color: "#bbb" }}
-        className={iconClass}
-      />
+      {categoryIcon(props.data.category, "#aaa")}
       {myProps.children}
     </>
-  );
-  return <components.Option {...myProps} />;
-};
-
-// function Option({ innerRef, isFocused, isSelected, innerProps, children }) {
-//   return (
-//     <MenuItem
-//       ref={innerRef}
-//       selected={isFocused}
-//       component="div"
-//       style={{
-//         fontWeight: isSelected ? 500 : 400
-//       }}
-//       {...innerProps}
-//     >
-//       {children}
-//     </MenuItem>
-//   )
-// }
+  )
+  return <components.Option {...myProps} />
+}
 
 Option.propTypes = {
   children: PropTypes.node,
@@ -161,7 +121,7 @@ Option.propTypes = {
   innerRef: PropTypes.oneOfType([PropTypes.func, PropTypes.object]),
   isFocused: PropTypes.bool,
   isSelected: PropTypes.bool
-};
+}
 
 function Placeholder({ selectProps, innerProps, children }) {
   return (
@@ -172,42 +132,42 @@ function Placeholder({ selectProps, innerProps, children }) {
     >
       {children}
     </Typography>
-  );
+  )
 }
 
 Placeholder.propTypes = {
   children: PropTypes.node,
   innerProps: PropTypes.object,
   selectProps: PropTypes.object.isRequired
-};
+}
 
 function SingleValue({ selectProps, innerProps, children }) {
   return (
     <Typography className={selectProps.classes.singleValue} {...innerProps}>
       {children}
     </Typography>
-  );
+  )
 }
 
 function ValueContainer({ selectProps, children }) {
-  return <div className={selectProps.classes.valueContainer}>{children}</div>;
+  return <div className={selectProps.classes.valueContainer}>{children}</div>
 }
 
 ValueContainer.propTypes = {
   children: PropTypes.node,
   selectProps: PropTypes.object.isRequired
-};
+}
 
 function Menu({ selectProps, innerProps, children }) {
   return (
     <Paper square className={selectProps.classes.paper} {...innerProps}>
       {children}
     </Paper>
-  );
+  )
 }
 
 const MenuList = props => {
-  const { children } = props;
+  const { children } = props
   return (
     // limit to 25 results
     <components.MenuList {...props}>
@@ -216,14 +176,14 @@ const MenuList = props => {
         <MenuItem style={{ color: "#999" }}>results truncated...</MenuItem>
       ) : null}
     </components.MenuList>
-  );
-};
+  )
+}
 
 Menu.propTypes = {
   children: PropTypes.node,
   innerProps: PropTypes.object,
   selectProps: PropTypes.object
-};
+}
 
 const myComponents = {
   Control,
@@ -234,12 +194,12 @@ const myComponents = {
   Placeholder,
   SingleValue,
   ValueContainer
-};
+}
 
 function IntegrationReactSelect({ options, defaultValue, ...otherprops }) {
-  const classes = useStyles();
-  const theme = useTheme();
-  const [value, setValue] = useState(defaultValue);
+  const classes = useStyles()
+  const theme = useTheme()
+  const [value, setValue] = useState(defaultValue)
 
   const selectStyles = {
     input: base => ({
@@ -249,7 +209,7 @@ function IntegrationReactSelect({ options, defaultValue, ...otherprops }) {
         font: "inherit"
       }
     })
-  };
+  }
 
   return (
     <div className={classes.root}>
@@ -266,7 +226,7 @@ function IntegrationReactSelect({ options, defaultValue, ...otherprops }) {
         />
       </NoSsr>
     </div>
-  );
+  )
 }
 
-export default IntegrationReactSelect;
+export default IntegrationReactSelect

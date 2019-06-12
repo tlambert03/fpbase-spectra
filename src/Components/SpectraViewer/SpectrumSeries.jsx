@@ -1,27 +1,52 @@
 import React, { memo } from "react"
-import { useQuery } from "react-apollo-hooks"
-import { GET_SPECTRUM } from "../../client/queries"
-import { AreaSplineSeries } from "react-jsx-highcharts"
+import { Series } from "react-jsx-highcharts"
 
 const OD = num => (num <= 0 ? 10 : -Math.log10(num))
 
+const hex2rgba = (hex, alpha = 1) => {
+  const [r, g, b] = hex.match(/\w\w/g).map(x => parseInt(x, 16));
+  return `rgba(${r},${g},${b},${alpha})`;
+};
+
+const CROSS_HATCH = {
+  pattern: {
+    path: {
+      d: ["M 5,5 L 10,10", "M 5,5 L 0,10", "M 5,5 L 10,0", "M 5,5 L 0,0"]
+    },
+    width: 10,
+    height: 10,
+    color: "#ddd",
+    opacity: 0.4
+  }
+}
+
+const VERT_LINES = {
+  pattern: {
+    path: {
+      d: "M 2,10 L 2,0"
+    },
+    width: 3,
+    height: 10,
+    opacity: 0.2
+  }
+}
+
 const SpectrumSeries = memo(function SpectrumSeries({
-  id,
   inverted,
   logScale,
   scaleEC,
-  scaleQY
+  scaleQY,
+  spectrum
 }) {
-  const {
-    data: { spectrum },
-    loading
-  } = useQuery(GET_SPECTRUM, { variables: { id } })
   if (!spectrum) return
-
-  let serie = [...spectrum.data]
   const willScaleEC = Boolean(
     spectrum.subtype === "EX" && scaleEC && spectrum.owner.extCoeff
   )
+  const willScaleQY = Boolean(
+    spectrum.subtype === "EM" && scaleQY && spectrum.owner.qy
+  )
+
+  let serie = [...spectrum.data]
   if (willScaleEC) {
     serie = serie.map(([a, b]) => [a, b * spectrum.owner.extCoeff])
   }
@@ -36,18 +61,37 @@ const SpectrumSeries = memo(function SpectrumSeries({
   if (logScale) {
     serie = [...serie].map(([a, b]) => [a, OD(b)])
   }
-  if (loading) return <></>
 
   let name = `${spectrum.owner.name}`
   if (["EX", "EM", "A_2P", "2P"].includes(spectrum.subtype)) {
     name += ` ${spectrum.subtype.replace("A_", "")}`
   }
+  let color = hex2rgba(spectrum.color, 0.9)
+  let fillColor = hex2rgba(spectrum.color, 0.5)
+  let lineWidth = 0.5
+  let type = "areaspline"
+  if (spectrum.category === "C") {
+    fillColor = CROSS_HATCH
+  }
+  if (spectrum.category === "L") {
+    fillColor = {...VERT_LINES}
+    lineWidth = 1
+  }
+  if (["BS", "LP"].includes(spectrum.subtype)) {
+    lineWidth = 1.5
+    type="spline"
+    color="#999"
+  }
   return (
-    <AreaSplineSeries
+    <Series
+      type={type}
       subtype={spectrum.subtype}
       scaleEC={willScaleEC}
+      scaleQY={willScaleQY}
       name={name}
-      color={spectrum.color}
+      color={color}
+      fillColor={fillColor}
+      lineWidth={lineWidth}
       className={`cat-${spectrum.category} subtype-${spectrum.subtype}`}
       data={serie}
       threshold={logScale ? 10 : 0}

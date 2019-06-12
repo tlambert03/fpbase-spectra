@@ -1,7 +1,9 @@
 import gql from "graphql-tag"
+import { GET_ACTIVE_SPECTRA, GET_ACTIVE_OWNERS } from "./queries"
 
 export const defaults = {
   activeSpectra: [],
+  activeOwners: [],
   chartOptions: {
     showY: false,
     showX: true,
@@ -9,9 +11,11 @@ export const defaults = {
     logScale: false,
     scaleEC: false,
     scaleQY: false,
+    shareTooltip: true,
     extremes: [null, null],
     __typename: "chartOptions"
-  }
+  },
+  excludeSubtypes: ["2P"]
 }
 
 function toggleChartOption(cache, key) {
@@ -28,6 +32,19 @@ function toggleChartOption(cache, key) {
   data.chartOptions[key] = !current.chartOptions[key]
   cache.writeData({ data })
   return data
+}
+
+function spectrumFrag(cache, id) {
+  return cache.readFragment({
+    id: "SpectrumInfo:" + String(id),
+    fragment: gql`
+      fragment Spectrum on SpectrumInfo {
+        owner {
+          slug
+        }
+      }
+    `
+  })
 }
 
 export const resolvers = {
@@ -50,26 +67,52 @@ export const resolvers = {
     toggleScaleQY: (_root, variables, { cache }) => {
       return toggleChartOption(cache, "scaleQY")
     },
+    toggleShareTooltip: (_root, variables, { cache }) => {
+      return toggleChartOption(cache, "shareTooltip")
+    },
     setChartExtremes: (_root, { extremes }, { cache }) => {
-      const data = { chartOptions: { extremes, __typename: "extremes" } }
+      const data = { chartOptions: { extremes, __typename: "chartOptions" } }
       cache.writeData({ data })
       return data
     },
-    updateActiveSpectra: async (_, { activeSpectra }, { cache }) => {
-      // const previous = cache.readQuery({ query: GET_ACTIVE_SPECTRA })
-      // const data = {
-      //   activeSpectra: [
-      //     ...new Set([...previous.activeSpectra, ...activeSpectra])
-      //   ]
-      // }
-      // Under the hood, cache.writeData automatically constructs
-      // a query from the  data object you pass in and calls
-      // cache.writeQuery.
+    setActiveSpectra: async (_, { activeSpectra }, { cache, client }) => {
+      const filtered = [...new Set(activeSpectra)]
+        .filter(id => Boolean(spectrumFrag(cache, id)))
+        .map(i => String(i))
       const data = {
-        activeSpectra: [...new Set(activeSpectra)]
+        activeSpectra: filtered
       }
-      await cache.writeData({ data })
+      await client.writeQuery({ query: GET_ACTIVE_SPECTRA, data })
       return data
+    },
+    setExcludeSubtypes: (_, { excludeSubtypes }, { cache }) => {
+      cache.writeData({ data: { excludeSubtypes } })
+    },
+    updateActiveSpectra: async (_, { add, remove }, { cache, client }) => {
+      let { activeSpectra } = cache.readQuery({ query: GET_ACTIVE_SPECTRA })
+      activeSpectra = activeSpectra.filter(id => !(remove || []).includes(id))
+      const toAdd = (add || []).filter(id => id).map(id => String(id))
+      const data = {
+        activeSpectra: [...new Set([...activeSpectra, ...toAdd])]
+      }
+      await client.writeQuery({ query: GET_ACTIVE_SPECTRA, data })
+      return data
+    },
+    updateActiveOwners: async (_, obj, info) => {
+      return addRemoveOwners(obj, info)
     }
   }
+}
+
+async function addRemoveOwners({ add, remove }, { cache, client }) {
+  let { activeOwners } = cache.readQuery({ query: GET_ACTIVE_OWNERS })
+  activeOwners = activeOwners.filter(slug => !(remove || []).includes(slug))
+  const toAdd = add || []
+  const data = {
+    activeOwners: [...new Set([...activeOwners, ...toAdd])].filter(
+      i => i !== null
+    )
+  }
+  await client.writeQuery({ query: GET_ACTIVE_OWNERS, data })
+  return data
 }

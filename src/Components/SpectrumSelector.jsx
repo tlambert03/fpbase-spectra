@@ -1,4 +1,4 @@
-import React, { useContext, useEffect } from "react"
+import React, { useEffect, useState } from "react"
 import PropTypes from "prop-types"
 import Select from "react-select"
 import Box from "@material-ui/core/Box"
@@ -7,8 +7,14 @@ import ToggleButtonGroup from "@material-ui/lab/ToggleButtonGroup"
 import { makeStyles } from "@material-ui/core/styles"
 import IconButton from "@material-ui/core/IconButton"
 import LinkIcon from "@material-ui/icons/Link"
-import { customFilterOption } from "./util"
-import { StateContext, DispatchContext } from "./Store"
+import { customFilterOption } from "../util"
+import { useQuery, useMutation } from "react-apollo-hooks"
+import { categoryIcon } from "../Components/FaIcon"
+import {
+  GET_ACTIVE_SPECTRA,
+  UPDATE_ACTIVE_SPECTRA,
+  GET_OWNER_OPTIONS
+} from "../client/queries"
 
 const useStyles = makeStyles(() => ({
   toggleButton: { height: "38px" },
@@ -23,39 +29,53 @@ function subtypeSorter(a, b) {
   return -1
 }
 
-// where value = {value: "ownerslug", lable: "ownername", spectra: [Array, of, IDs]}
-const SpectrumSelector = ({ options, selector, category, otherOwners }) => {
-  const dispatch = useContext(DispatchContext)
+const SpectrumSelector = ({
+  options,
+  current,
+  otherOwners,
+  onChange,
+  showIcon
+}) => {
   const selectRef = React.useRef()
-
-  const value = options.find(opt => opt.value === selector.value)
+  const [value, setValue] = useState(current)
   const subtypes = (value && value.spectra) || []
+  //const updateOwners = useMutation(UPDATE_ACTIVE_OWNERS)
+  const updateSpectra = useMutation(UPDATE_ACTIVE_SPECTRA)
+
+  const {
+    data: { excludeSubtypes }
+  } = useQuery(GET_OWNER_OPTIONS)
 
   // when the spectrum selector changes
-  const handleOwnerChange = e => {
+  const handleOwnerChange = newValue => {
     // if it's the same as the previous value do nothing
-    const newValue = e && e.value
-    if (newValue === value) return
-    dispatch({
-      type: "CHANGE_FORM_OWNER",
-      id: selector.id,
-      category,
-      newValue
+    if (value === newValue) return
+    setValue(newValue)
+    onChange(newValue && newValue.value)
+    updateSpectra({
+      variables: {
+        add:
+          newValue &&
+          newValue.spectra
+            .filter(({ subtype }) => !excludeSubtypes.includes(subtype))
+            .map(({ id }) => id),
+        remove: value && value.spectra.map(({ id }) => id)
+      }
     })
+    //updateOwners({ variables: { remove: [value && value.value] } })
   }
 
   // clean up on unmount
   useEffect(() => {
     return () => {
-      if (value)
-        dispatch({
-          type: "UPDATE_SPECTRA",
-          remove: value.spectra.map(({ id }) => id)
-        })
+      if (value) {
+      }
+      // dispatch({
+      //   type: "UPDATE_SPECTRA",
+      //   remove: value.spectra.map(({ id }) => id)
+      // })
     }
-  }, [dispatch, value])
-
-  const myOptions = options.filter(opt => !otherOwners.includes(opt.value))
+  }, [value])
 
   useEffect(() => {
     const blurme = e => (e.code === "Escape" ? selectRef.current.blur() : null)
@@ -65,14 +85,27 @@ const SpectrumSelector = ({ options, selector, category, otherOwners }) => {
     }
   }, [])
 
-  const ownerLink =
-    category === "P" && selector.url
-      ? `/protein/${selector.url}`
-      : selector.url || null
-
-  console.log("SpectrumSelector rendered", value, otherOwners)
+  let ownerLink
+  if (current) {
+    if (current.category === "P") {
+      ownerLink = current.url ? `/protein/${current.url}` : current.url || null
+    } else if (current.url) {
+      ownerLink = current.url
+    }
+  }
   return (
     <Box display="flex">
+      {current &&
+        showIcon &&
+        categoryIcon(current.category, "rgba(0,0,50,0.4)", {
+          style: {
+            position: "relative",
+            top: 10,
+            left: current.category === 'L' ? 4 : 2,
+            height: "1.3rem",
+            marginRight: 10
+          }
+        })}
       <Box flexGrow={1}>
         <Select
           ref={selectRef}
@@ -81,10 +114,24 @@ const SpectrumSelector = ({ options, selector, category, otherOwners }) => {
           placeholder="Type to search..."
           filterOption={customFilterOption}
           onChange={handleOwnerChange}
-          options={myOptions}
+          // options={options.filter(
+          //   opt => !(otherOwners || []).includes(opt.value)
+          // )}
+          options={options.map(opt =>
+            (otherOwners || []).includes(opt.value)
+              ? {
+                  ...opt,
+                  label: opt.label + " (already selected)",
+                  isDisabled: true
+                }
+              : opt
+          )}
         />
       </Box>
-      {subtypes.length > 1 && <SubtypeSelector subtypes={subtypes} />}
+      <SubtypeSelector
+        subtypes={subtypes}
+        skip={current && !["P", "D"].includes(current.category)}
+      />
       {ownerLink && (
         <IconButton
           color="primary"
@@ -102,23 +149,39 @@ const SpectrumSelector = ({ options, selector, category, otherOwners }) => {
 
 SpectrumSelector.propTypes = {
   options: PropTypes.arrayOf(PropTypes.object).isRequired,
-  selector: PropTypes.objectOf(PropTypes.any).isRequired,
-  category: PropTypes.string.isRequired
+  current: PropTypes.objectOf(PropTypes.any),
+  otherOwners: PropTypes.arrayOf(PropTypes.string),
+  showIcon: PropTypes.bool
 }
 
-const SubtypeSelector = ({ subtypes }) => {
-  const dispatch = useContext(DispatchContext)
+SpectrumSelector.defaultProps = {
+  otherOwners: [],
+  current: null,
+  showIcon: true
+}
+
+const SubtypeSelector = ({ subtypes, skip }) => {
   const classes = useStyles()
+  const {
+    data: { activeSpectra }
+  } = useQuery(GET_ACTIVE_SPECTRA)
+  const updateSpectra = useMutation(UPDATE_ACTIVE_SPECTRA)
 
   const handleClick = e => {
     const elem = e.target.closest("button")
     const checked = !elem.classList.contains("Mui-selected")
-    const action = { type: "UPDATE_SPECTRA" }
-    action[checked ? "add" : "remove"] = [elem.value]
-    dispatch(action)
+    const variables = {}
+    variables[checked ? "add" : "remove"] = [elem.value]
+    updateSpectra({ variables })
   }
 
+  if (skip) return null
+
   subtypes.sort(subtypeSorter)
+  subtypes.forEach(subtype => {
+    subtype.active = activeSpectra.includes(subtype.id)
+  })
+
   return (
     <Box>
       <ToggleButtonGroup

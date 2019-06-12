@@ -1,10 +1,31 @@
 const FONTS =
   'Roboto, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";'
 
+const toolTipRow = entry => {
+  return (
+    '<tr><td><span style="color:' +
+    entry.series.color +
+    '">' +
+    "&#9673; " +
+    "</span>" +
+    entry.series.name +
+    (entry.series.userOptions.scaleEC
+      ? ' <span style="font-size: 0.7rem; font-style: italic">(EC)</span>'
+      : "") +
+    (entry.series.userOptions.scaleQY
+      ? ' <span style="font-size: 0.7rem; font-style: italic">(QY)</span>'
+      : "") +
+    ':</td><td style="text-align: right; font-weight: bold"> ' +
+    (entry.series.userOptions.scaleEC
+      ? Math.round(entry.y)
+      : (Math.round(100 * entry.y) / 100).toFixed(2)
+    ).toLocaleString() +
+    "</td></tr>"
+  )
+}
 const DEFAULT_OPTIONS = {
   plotOptions: {
     series: {
-      fillOpacity: 0.5,
       animation: false,
       lineWidth: 0.5,
       marker: {
@@ -18,8 +39,7 @@ const DEFAULT_OPTIONS = {
     zoomType: "x",
     panning: true,
     panKey: "shift",
-    animation: { duration: 50 },
-    height: 350
+    animation: { duration: 50 }
   },
   yAxis: {
     gridLineWidth: 1,
@@ -32,8 +52,7 @@ const DEFAULT_OPTIONS = {
         }
       }
     },
-    max: 1,
-    min: 0
+    maxPadding: 0.01
   },
   xAxis: {
     gridLineWidth: 1,
@@ -85,7 +104,7 @@ const DEFAULT_OPTIONS = {
           "downloadSVG",
           "separator",
           "downloadCSV",
-          "printChart",
+          "printChart"
           //"separator",
           //"reset"
           // "openInCloud"
@@ -120,43 +139,32 @@ const DEFAULT_OPTIONS = {
         "<td style='text-align: right; line-height: 1.1rem; font-size: 0.75rem; border-bottom: 1px solid #ccc;'>" +
         this.x +
         "nm</td></tr>"
-      this.points.forEach(function(entry) {
-        tooltip_html +=
-          '<tr><td><span style="color:' +
-          entry.series.color +
-          '">' +
-          "&#9673; " +
-          "</span>" +
-          entry.series.name +
-          (entry.series.userOptions.scaleEC
-            ? ' <span style="font-size: 0.6rem">(M<sup>-1</sup> cm<sup>-1</sup>)</span>'
-            : "") +
-          ':</td><td style="text-align: right; font-weight: bold"> ' +
-          (entry.series.userOptions.scaleEC
-            ? Math.round(entry.y)
-            : (Math.round(100 * entry.y) / 100).toFixed(2)
-          ).toLocaleString() +
-          "</td></tr>"
-      })
+
+      if (this.point) {
+        tooltip_html += toolTipRow(this.point)
+      } else {
+        this.points.forEach(function(entry) {
+          tooltip_html += toolTipRow(entry)
+        })
+      }
+
       tooltip_html += "</table>"
       return tooltip_html
     },
     positioner(labelWidth, labelHeight, point) {
       const chartwidth = this.chart.chartWidth
+      const yAx2 = this.chart.get("yAx2")
+      const rightPad = (yAx2 && yAx2.axisTitleMargin) || 0
       const y = Math.min(
         Math.max(point.plotY, 50),
         this.chart.chartHeight - labelHeight - 40
       )
-      if (labelWidth/4 + point.plotX + labelWidth < chartwidth) {
-        return {
-          x: point.plotX + labelWidth/4,
-          y
-        }
-      }
-      return {
-        x: point.plotX - labelWidth - 20,
-        y
-      }
+      const t = 10 + point.plotX + labelWidth / 3
+      const x =
+        t + labelWidth < chartwidth - rightPad
+          ? t
+          : point.plotX - labelWidth - 20
+      return { x, y }
     },
     shadow: false,
     style: {

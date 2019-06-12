@@ -4,7 +4,6 @@ import Tab from "@material-ui/core/Tab"
 import Button from "@material-ui/core/Button"
 import { makeStyles } from "@material-ui/core/styles"
 import SpectrumSelectGroup from "./SpectrumSelectGroup"
-import { StateContext, initialize, DispatchContext } from "./Store"
 
 const useStyles = makeStyles(theme => ({
   tabHeader: {

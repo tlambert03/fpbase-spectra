@@ -5,7 +5,8 @@ const typeDefs = gql`
     activeSpectra: [Int]
   }
   extend type Mutation {
-    updateActiveSpectra(activeSpectra: [Int]!): [Int]
+    setActiveSpectra(activeSpectra: [Int]!): [Int],
+    updateActiveSpectra(add: [String], remove: [String]): [Int]
   }
 `
 
