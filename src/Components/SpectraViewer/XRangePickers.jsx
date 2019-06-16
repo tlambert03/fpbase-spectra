@@ -91,7 +91,7 @@ const XRangePickers = ({ getAxis, getHighcharts, visible }) => {
               Math.abs(node.textContent - min),
               Math.abs(node.textContent - max)
             ) <
-            0.4 * axis.object.tickInterval
+            0.43 * axis.object.tickInterval
           ) {
             node.style.display = "none"
           }

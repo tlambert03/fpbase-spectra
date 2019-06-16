@@ -36,7 +36,8 @@ const SpectrumSeries = memo(function SpectrumSeries({
   logScale,
   scaleEC,
   scaleQY,
-  spectrum
+  spectrum,
+  areaFill
 }) {
   if (!spectrum) return
   const willScaleEC = Boolean(
@@ -69,7 +70,7 @@ const SpectrumSeries = memo(function SpectrumSeries({
   let color = hex2rgba(spectrum.color, 0.9)
   let fillColor = hex2rgba(spectrum.color, 0.5)
   let lineWidth = 0.5
-  let type = "areaspline"
+  let type = areaFill ? "areaspline" : 'spline'
   if (spectrum.category === "C") {
     fillColor = CROSS_HATCH
   }

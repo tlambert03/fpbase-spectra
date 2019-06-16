@@ -1,7 +1,7 @@
 import React from "react"
 import SvgIcon from "@material-ui/core/SvgIcon"
 import {
-  faCircle,
+  faQuestionCircle,
   faDna,
   faFlask,
   faAdjust,
@@ -27,7 +27,7 @@ function FAIcon(props) {
 }
 
 function categoryIcon(category, color = "#aaa", props) {
-  let iconClass = faCircle
+  let iconClass = faQuestionCircle
   const iconMap = {
     P: faDna,
     D: faFlask,

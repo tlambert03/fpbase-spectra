@@ -4,7 +4,7 @@ import Modal from "@material-ui/core/Modal"
 import Typography from "@material-ui/core/Typography"
 import { makeStyles } from "@material-ui/core/styles"
 import { customFilterOption } from "../util"
-import IntegrationReactSelect from "./IntegrationReactSelect"
+import MuiReactSelect from "./MuiReactSelect"
 import { useMutation, useQuery } from "react-apollo-hooks"
 
 import { UPDATE_ACTIVE_SPECTRA, GET_OWNER_OPTIONS } from "../client/queries"
@@ -97,9 +97,9 @@ const SearchModal = ({ options, open, setOpen }) => {
           Quick Entry
         </Typography>
 
-        <IntegrationReactSelect
+        <MuiReactSelect
           autoFocus
-          // classes={classes}
+          showIcon
           options={options}
           filterOption={customFilterOption}
           onChange={handleChange}

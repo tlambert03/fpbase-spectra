@@ -100,7 +100,7 @@ const debounce = (fn, time) => {
 }
 window.debounce = debounce
 
-const customFilterOption = ({ label }, query) => {
+const customFilterOption = ({ label, value, data }, query) => {
   const words = query.split(" ")
   const opts = label.toLowerCase()
   return words.reduce(
@@ -170,11 +170,29 @@ function decoder(str, decoder, charset) {
     return strWithoutPlus
   }
 }
+
+function optionsLoader(options, optionsPerLoad = 15) {
+  return async (search, prevOptions) => {
+    let filteredOptions = options
+    const hasMore = filteredOptions.length > prevOptions.length + optionsPerLoad
+    const slicedOptions = filteredOptions.slice(
+      prevOptions.length,
+      prevOptions.length + optionsPerLoad
+    )
+
+    return {
+      options: slicedOptions,
+      hasMore
+    }
+  }
+}
+
 export {
   debounce,
   customFilterOption,
   reshapeSpectraInfo,
   decoder,
   getStorageWithExpire,
-  setStorageWithTimeStamp
+  setStorageWithTimeStamp,
+  optionsLoader
 }

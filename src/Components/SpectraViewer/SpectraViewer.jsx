@@ -34,10 +34,18 @@ applyPatterns(Highcharts)
 fixLogScale(Highcharts)
 
 const calcHeight = width => {
-  if (width < 650) return 235
-  if (width < 900) return 325
-  if (width < 1200) return 375
-  return 425
+  if (width < 600) return 235
+  if (width < 960) return 325
+  if (width < 1280) return 375
+  if (width < 1920) return 420
+  return 440
+}
+
+export function spectraSorter(a, b) {
+  const SPECTRA_ORDER = ["P", "D", "F", "L", "C"]
+  if (SPECTRA_ORDER.indexOf(a.category) > SPECTRA_ORDER.indexOf(b.category))
+    return 1
+  return -1
 }
 
 const SpectraViewerContainer = ({ spectraInfo }) => {
@@ -72,7 +80,7 @@ const SpectraViewerContainer = ({ spectraInfo }) => {
   const client = useApolloClient()
   useEffect(() => {
     async function fetchData() {
-      const _data = await Promise.all(
+      let _data = await Promise.all(
         activeSpectra
           .filter(i => i)
           .map(id => client.query({ query: GET_SPECTRUM, variables: { id } }))
@@ -111,7 +119,13 @@ const SpectraViewer = memo(function SpectraViewer({
   chartOptions
 }) {
   const windowWidth = useWindowWidth()
-  const height = calcHeight(windowWidth)
+  let height = calcHeight(windowWidth)
+  
+  const _chart = Highcharts.charts[0]
+  if (_chart) {
+    const legendHeight = Highcharts.charts[0].legend.legendHeight || 0
+    height += legendHeight
+  }
 
   const numSpectra = data.length
   return (
@@ -133,9 +147,15 @@ const SpectraViewer = memo(function SpectraViewer({
           min={0}
           endOnTick={chartOptions.scaleEC}
         >
-          {data.filter(i => i.subtype !== 'EX').map(spectrum => (
-            <SpectrumSeries spectrum={spectrum} key={spectrum.id} {...chartOptions} />
-          ))}
+          {data
+            .filter(i => i.subtype !== "EX")
+            .map(spectrum => (
+              <SpectrumSeries
+                spectrum={spectrum}
+                key={spectrum.id}
+                {...chartOptions}
+              />
+            ))}
         </YAxis>
         <YAxis
           id="yAx2"
@@ -153,19 +173,29 @@ const SpectraViewer = memo(function SpectraViewer({
           min={0}
           endOnTick={chartOptions.scaleEC}
         >
-          {data.filter(i => i.subtype === 'EX').map(spectrum => (
-            <SpectrumSeries spectrum={spectrum} key={spectrum.id} {...chartOptions} />
-          ))}
+          {data
+            .filter(i => i.subtype === "EX")
+            .map(spectrum => (
+              <SpectrumSeries
+                spectrum={spectrum}
+                key={spectrum.id}
+                {...chartOptions}
+              />
+            ))}
         </YAxis>
 
         <XAxisWithRange options={xAxis} showPickers={numSpectra > 0} />
-        <MyCredits axisId="yAx2">fpbase.org</MyCredits>
+        <MyCredits axisId="yAx2" hide={numSpectra < 1} />
       </HighchartsChart>
     </div>
   )
 })
 
-const MyCredits = provideAxis(function MyCredits({ getAxis, getHighcharts }) {
+const MyCredits = provideAxis(function MyCredits({
+  getAxis,
+  getHighcharts,
+  hide
+}) {
   useEffect(() => {
     const axis = getAxis()
     function shiftCredits() {
@@ -179,7 +209,15 @@ const MyCredits = provideAxis(function MyCredits({ getAxis, getHighcharts }) {
     shiftCredits()
   }, []) // eslint-disable-line
 
-  return <Credits position={{ y: -45 }}>fpbase.org</Credits>
+  return (
+    <Credits
+      position={{ y: -45 }}
+      href="https://www.fpbase.org/spectra"
+      style={{ display: hide ? "none" : "block" }}
+    >
+      fpbase.org
+    </Credits>
+  )
 })
 
 export const XAxisWithRange = ({ options, showPickers }) => {

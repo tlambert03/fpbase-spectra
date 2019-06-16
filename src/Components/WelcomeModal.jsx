@@ -38,7 +38,9 @@ const useStyles = makeStyles(theme => ({
   },
   headerIcon: {
     marginRight: ".6rem",
-    color: "#999"
+    color: "#999",
+    top: 5,
+    position: 'relative',
   },
   paper: {
     position: "absolute",

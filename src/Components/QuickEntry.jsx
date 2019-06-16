@@ -9,18 +9,11 @@ const QuickEntry = ({ options }) => {
   const handleClick = () => setSearchOpen(true)
   
   return (
-    <div>
+    <div style={{height: 0}}>
       <IconButton
-        style={{
-          position: "relative",
-          top: -2,
-          right: 25,
-          zIndex: 2,
-          backgroundColor: "transparent"
-        }}
         onClick={handleClick}
       >
-        <SearchIcon />
+        <SearchIcon style={{fontSize: '1.8rem'}} />
       </IconButton>
       <SearchModal
         options={options}

@@ -1,14 +1,11 @@
-import React, { useState } from "react"
-import Select, { components } from "react-select"
-import { makeStyles, useTheme } from "@material-ui/core/styles"
+import React from "react"
 import Typography from "@material-ui/core/Typography"
 import NoSsr from "@material-ui/core/NoSsr"
 import TextField from "@material-ui/core/TextField"
 import Paper from "@material-ui/core/Paper"
-import MenuItem from "@material-ui/core/MenuItem"
 import PropTypes from "prop-types"
-import { customFilterOption } from "../util"
-import { categoryIcon } from "./FaIcon"
+import { makeStyles, useTheme } from "@material-ui/core/styles"
+import SortablePaginatedSelect from "./SortablePaginatedSelect"
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -103,26 +100,6 @@ Control.propTypes = {
   selectProps: PropTypes.object.isRequired
 }
 
-const Option = props => {
-  const myProps = { ...props }
-
-  myProps.children = (
-    <>
-      {categoryIcon(props.data.category, "#aaa")}
-      {myProps.children}
-    </>
-  )
-  return <components.Option {...myProps} />
-}
-
-Option.propTypes = {
-  children: PropTypes.node,
-  innerProps: PropTypes.object,
-  innerRef: PropTypes.oneOfType([PropTypes.func, PropTypes.object]),
-  isFocused: PropTypes.bool,
-  isSelected: PropTypes.bool
-}
-
 function Placeholder({ selectProps, innerProps, children }) {
   return (
     <Typography
@@ -166,19 +143,6 @@ function Menu({ selectProps, innerProps, children }) {
   )
 }
 
-const MenuList = props => {
-  const { children } = props
-  return (
-    // limit to 25 results
-    <components.MenuList {...props}>
-      {Array.isArray(children) ? children.slice(0, 25) : children}
-      {children.length > 25 ? (
-        <MenuItem style={{ color: "#999" }}>results truncated...</MenuItem>
-      ) : null}
-    </components.MenuList>
-  )
-}
-
 Menu.propTypes = {
   children: PropTypes.node,
   innerProps: PropTypes.object,
@@ -188,18 +152,15 @@ Menu.propTypes = {
 const myComponents = {
   Control,
   Menu,
-  MenuList,
   NoOptionsMessage,
-  Option,
   Placeholder,
   SingleValue,
   ValueContainer
 }
 
-function IntegrationReactSelect({ options, defaultValue, ...otherprops }) {
+function MuiReactSelect(props) {
   const classes = useStyles()
   const theme = useTheme()
-  const [value, setValue] = useState(defaultValue)
 
   const selectStyles = {
     input: base => ({
@@ -214,19 +175,15 @@ function IntegrationReactSelect({ options, defaultValue, ...otherprops }) {
   return (
     <div className={classes.root}>
       <NoSsr>
-        <Select
+        <SortablePaginatedSelect
           classes={classes}
           styles={selectStyles}
-          options={options}
           components={myComponents}
-          filterOption={customFilterOption}
-          value={value}
-          onChange={setValue}
-          {...otherprops}
+          {...props}
         />
       </NoSsr>
     </div>
   )
 }
 
-export default IntegrationReactSelect
+export default MuiReactSelect

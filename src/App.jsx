@@ -3,7 +3,8 @@ import { useQuery, useApolloClient } from "react-apollo-hooks"
 import {
   SPECTRA_LIST,
   GET_ACTIVE_SPECTRA,
-  GET_CHART_OPTIONS} from "./client/queries"
+  GET_CHART_OPTIONS
+} from "./client/queries"
 import { ApolloProvider } from "react-apollo-hooks"
 import client from "./client/client"
 import {
@@ -11,11 +12,10 @@ import {
   getStorageWithExpire,
   setStorageWithTimeStamp
 } from "./util"
-import QuickEntry from "./Components/QuickEntry"
-import { SpectraViewer, ChartOptionsForm } from "./Components/SpectraViewer"
+import { SpectraViewer } from "./Components/SpectraViewer"
 import stateToUrl from "./Components/stateToUrl"
-import OwnerGroup from "./Components/OwnerGroup"
-import OwnerOptionsForm from "./Components/OwnerOptionsForm"
+import OwnersContainer from "./Components/OwnersContainer"
+import WelcomeModal from "./Components/WelcomeModal"
 
 const useStashedSpectraInfo = spectra => {
   const cacheKey = "_FPbaseSpectraStash"
@@ -23,7 +23,7 @@ const useStashedSpectraInfo = spectra => {
   const { data, loading } = useQuery(SPECTRA_LIST)
 
   useEffect(() => {
-    if(!loading && data.spectra){
+    if (!loading && data.spectra) {
       const _stash = reshapeSpectraInfo(data.spectra)
       setStash(_stash)
       setStorageWithTimeStamp(cacheKey, _stash)
@@ -39,14 +39,14 @@ const App = () => {
   return (
     <>
       <SpectraViewer spectraInfo={spectraInfo} />
-      <ChartOptionsForm />
-      <OwnerOptionsForm />
-      {owners && <QuickEntry options={Object.values(owners)} />}
-
       {spectraInfo && (
-        <OwnerGroup owners={owners} spectraInfo={spectraInfo}></OwnerGroup>
+        <OwnersContainer
+          owners={owners}
+          spectraInfo={spectraInfo}
+        ></OwnersContainer>
       )}
       <UrlUpdater />
+      <WelcomeModal />
     </>
   )
 }

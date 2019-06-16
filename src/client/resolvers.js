@@ -12,6 +12,7 @@ export const defaults = {
     scaleEC: false,
     scaleQY: false,
     shareTooltip: true,
+    areaFill: true,
     extremes: [null, null],
     __typename: "chartOptions"
   },
@@ -69,6 +70,9 @@ export const resolvers = {
     },
     toggleShareTooltip: (_root, variables, { cache }) => {
       return toggleChartOption(cache, "shareTooltip")
+    },
+    toggleAreaFill: (_root, variables, { cache }) => {
+      return toggleChartOption(cache, "areaFill")
     },
     setChartExtremes: (_root, { extremes }, { cache }) => {
       const data = { chartOptions: { extremes, __typename: "chartOptions" } }

@@ -19,6 +19,7 @@ const ChartOptionsForm = memo(function ChartOptionsForm({ options }) {
   const toggleScaleEC = useMutation(toggleMut("ScaleEC"))
   const toggleScaleQY = useMutation(toggleMut("ScaleQY"))
   const toggleShareTooltip = useMutation(toggleMut("ShareTooltip"))
+  const toggleAreaFill = useMutation(toggleMut('AreaFill'))
   const {
     data: { chartOptions }
   } = useQuery(GET_CHART_OPTIONS)
@@ -41,6 +42,12 @@ const ChartOptionsForm = memo(function ChartOptionsForm({ options }) {
         checked={chartOptions.showGrid}
         value="labels"
         name="Show Grid"
+      />
+      <ListCheckbox
+        onCheckItem={toggleAreaFill}
+        checked={chartOptions.areaFill}
+        value="labels"
+        name="Fill area under curves"
       />
       <ListCheckbox
         onCheckItem={toggleLogScale}

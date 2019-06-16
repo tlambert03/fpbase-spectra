@@ -94,6 +94,7 @@ const GET_CHART_OPTIONS = gql`
       showY
       showX
       showGrid
+      areaFill
       logScale
       scaleEC
       scaleQY
