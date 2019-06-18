@@ -98,16 +98,6 @@ const debounce = (fn, time) => {
     timeout = setTimeout(functionCall, time)
   }
 }
-window.debounce = debounce
-
-const customFilterOption = ({ label, value, data }, query) => {
-  const words = query.split(" ")
-  const opts = label.toLowerCase()
-  return words.reduce(
-    (acc, cur) => acc && opts.includes(cur.toLowerCase()),
-    true
-  )
-}
 
 function reshapeSpectraInfo(arr) {
   if (!arr) return {}
@@ -171,28 +161,10 @@ function decoder(str, decoder, charset) {
   }
 }
 
-function optionsLoader(options, optionsPerLoad = 15) {
-  return async (search, prevOptions) => {
-    let filteredOptions = options
-    const hasMore = filteredOptions.length > prevOptions.length + optionsPerLoad
-    const slicedOptions = filteredOptions.slice(
-      prevOptions.length,
-      prevOptions.length + optionsPerLoad
-    )
-
-    return {
-      options: slicedOptions,
-      hasMore
-    }
-  }
-}
-
 export {
   debounce,
-  customFilterOption,
   reshapeSpectraInfo,
   decoder,
   getStorageWithExpire,
-  setStorageWithTimeStamp,
-  optionsLoader
+  setStorageWithTimeStamp
 }

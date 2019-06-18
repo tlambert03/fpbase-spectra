@@ -36,9 +36,9 @@ fixLogScale(Highcharts)
 const calcHeight = width => {
   if (width < 600) return 235
   if (width < 960) return 325
-  if (width < 1280) return 375
-  if (width < 1920) return 420
-  return 440
+  if (width < 1280) return 370
+  if (width < 1920) return 400
+  return 420
 }
 
 export function spectraSorter(a, b) {
@@ -120,7 +120,7 @@ const SpectraViewer = memo(function SpectraViewer({
 }) {
   const windowWidth = useWindowWidth()
   let height = calcHeight(windowWidth)
-  
+
   const _chart = Highcharts.charts[0]
   if (_chart) {
     const legendHeight = Highcharts.charts[0].legend.legendHeight || 0
@@ -146,6 +146,10 @@ const SpectraViewer = memo(function SpectraViewer({
           max={chartOptions.logScale ? 6 : 1}
           min={0}
           endOnTick={chartOptions.scaleEC}
+          labels={{
+            ...yAxis.labels,
+            enabled: yAxis.labels.enabled && numSpectra > 0
+          }}
         >
           {data
             .filter(i => i.subtype !== "EX")

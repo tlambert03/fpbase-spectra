@@ -4,12 +4,13 @@ const useWindowWidth = delay => {
   const [width, setWidth] = useState(window.innerWidth)
 
   useEffect(() => {
-    const handleResize = () => {
+    const handleResize = debounce(function() {
       setWidth(window.innerWidth)
-    }
-    window.addEventListener("resize", debounce(handleResize, 40))
+    }, 100)
+
+    window.addEventListener("resize", handleResize)
     return () => {
-      window.removeEventListener("resize", debounce(handleResize, 40))
+      window.removeEventListener("resize", handleResize)
     }
   })
 

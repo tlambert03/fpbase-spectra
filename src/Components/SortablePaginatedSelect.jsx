@@ -1,10 +1,28 @@
 import React, { useState, useEffect } from "react"
 import { AsyncPaginateBase } from "react-select-async-paginate"
-import Select from "react-select"
-import { optionsLoader } from "../util"
 import { categoryIcon } from "./FaIcon"
 import { components } from "react-select"
 import PropTypes from "prop-types"
+
+try {
+  delete AsyncPaginateBase.propTypes.selectRef
+} catch {}
+
+function optionsLoader(options, optionsPerLoad = 15) {
+  return async (search, prevOptions) => {
+    let filteredOptions = options
+    const hasMore = filteredOptions.length > prevOptions.length + optionsPerLoad
+    const slicedOptions = filteredOptions.slice(
+      prevOptions.length,
+      prevOptions.length + optionsPerLoad
+    )
+
+    return {
+      options: slicedOptions,
+      hasMore
+    }
+  }
+}
 
 const filterOption = (query, label) => {
   const words = query.toLowerCase().split(" ")
@@ -34,14 +52,18 @@ const SortablePaginatedSelect = ({
   components,
   ...otherprops
 }) => {
-  const [dynamicOptions, setOptions] = React.useState(options)
+  const [dynamicOptions, setOptions] = React.useState()
   const [inputValue, setInputValue] = React.useState("")
+
+  useEffect(() => {
+    setOptions(options)
+  }, [options])
 
   // blur the select element when the escape key is pressed
   const ref = React.useRef()
   useEffect(() => {
     const blurme = e => (e.code === "Escape" ? ref.current.blur() : null)
-    //document.addEventListener("keydown", blurme)
+    document.addEventListener("keydown", blurme)
     return () => {
       document.removeEventListener("keydown", blurme)
     }
@@ -51,7 +73,7 @@ const SortablePaginatedSelect = ({
     setInputValue(query)
     if (action === "input-change") {
       if (query) {
-        const newOpts = options
+        const newOpts = (options || [])
           .filter(({ label }) => filterOption(query, label))
           .sort(querySorter(query))
         setOptions(newOpts)
@@ -62,30 +84,39 @@ const SortablePaginatedSelect = ({
   }
 
   const [menuIsOpen, setMenuIsOpen] = useState(false)
-  const onMenuOpen = () => setMenuIsOpen(true)
+  const onMenuOpen = () => {
+    setMenuIsOpen(true)
+  }
+
   const onMenuClose = () => {
     setOptions(options)
     setMenuIsOpen(false)
   }
-  console.log(dynamicOptions)
+
   return (
     <AsyncPaginateBase
       {...otherprops}
       loadOptions={optionsLoader(dynamicOptions, 15)}
-      options={dynamicOptions.slice(0, 15)}
+      options={dynamicOptions && dynamicOptions.slice(0, 15)}
       inputValue={inputValue}
+      cacheUniq={options}
       onInputChange={handleInputChange}
       filterOption={() => true}
       menuIsOpen={menuIsOpen}
       onMenuOpen={onMenuOpen}
       onMenuClose={onMenuClose}
-      //selectRef={ref}
+      selectRef={ref}
       components={{
         ...components,
         ...(showIcon ? { Option: OptionWithIcon } : {})
       }}
     />
   )
+}
+SortablePaginatedSelect.propTypes = {
+  showIcon: PropTypes.bool,
+  components: PropTypes.object,
+  options: PropTypes.array
 }
 
 SortablePaginatedSelect.defaultProps = {

@@ -9,20 +9,18 @@ import {
 import update from "immutability-helper"
 import Tabs from "@material-ui/core/Tabs"
 import Tab from "@material-ui/core/Tab"
-import Button from "@material-ui/core/Button"
 import { makeStyles } from "@material-ui/core/styles"
-import OwnerOptionsForm from "./OwnerOptionsForm"
-import ChartOptionsForm from "./SpectraViewer/ChartOptionsForm"
-import QuickEntry from "./QuickEntry"
+import MyAppBar from "./MyAppBar"
 
 import SpectrumSelectorGroup from "./SpectrumSelectorGroup"
 import { Typography } from "@material-ui/core"
+import useWindowWidth from "./useWindowWidth"
 
 const useStyles = makeStyles(theme => ({
   tabHeader: {
-    marginBottom: 12,
-    marginLeft: 60,
-    paddingLeft: 0
+    //marginBottom: 12,
+    //marginLeft: 60,
+    //paddingLeft: 0
   },
   tabLabel: {
     marginTop: 0,
@@ -30,19 +28,19 @@ const useStyles = makeStyles(theme => ({
     minHeight: 40,
     // lineHeight: 0,
     [theme.breakpoints.down("xs")]: {
-      fontSize: "0.65rem",
+      fontSize: "0.7rem",
       paddingLeft: 5,
       paddingRight: 5
     },
     [theme.breakpoints.up("sm")]: {
       fontSize: ".73rem",
-      paddingLeft: 20,
-      paddingRight: 20
+      paddingLeft: "4%",
+      paddingRight: "4%"
     },
     [theme.breakpoints.up("md")]: {
       fontSize: ".76rem",
-      paddingLeft: 25,
-      paddingRight: 25
+      paddingLeft: 20,
+      paddingRight: 20
     },
     [theme.breakpoints.up("lg")]: {
       fontSize: ".9rem",
@@ -50,11 +48,12 @@ const useStyles = makeStyles(theme => ({
       paddingRight: 60
     }
   },
-  categoryHeader: { 
-    textTransform: "uppercase", 
+  categoryHeader: {
+    textTransform: "uppercase",
     fontSize: "small",
     color: "#3F51B5",
-    marginTop: '1rem',
+    marginTop: ".2rem",
+    marginBottom: "0.4rem"
   }
 }))
 
@@ -68,21 +67,6 @@ function selectorSorter(a, b) {
   if (ORDER.indexOf(a.category) > ORDER.indexOf(b.category)) return 1
   return -1
 }
-
-// function getUnique(arr) {
-//   let set = new Set()
-//   return arr
-//     .map((v, index) => {
-//       if (set.has(v.id)) {
-//         return false
-//       } else {
-//         set.add(v.id)
-//         return index
-//       }
-//     })
-//     .filter(e => e)
-//     .map(e => arr[e])
-// }
 
 const OwnersContainer = ({ owners, spectraInfo }) => {
   const {
@@ -99,6 +83,32 @@ const OwnersContainer = ({ owners, spectraInfo }) => {
       setTab(newValue)
     }
   }
+
+  // keyboard shortcut for tab switcher
+  useEffect(() => {
+    const handleKeyDown = event => {
+      // don't do anything if we're on an input
+      if (document.activeElement.tagName.toUpperCase() === "INPUT") {
+        return
+      }
+      switch (event.code) {
+        case "Digit1":
+        case "Digit2":
+        case "Digit3":
+        case "Digit4":
+        case "Digit5":
+          setTab(event.key - 1)
+          break
+        default:
+          break
+      }
+    }
+
+    document.addEventListener("keydown", handleKeyDown)
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown)
+    }
+  }, [])
 
   // this makes sure that all active spectra are reflected in the ownerSlugs array
   useEffect(() => {
@@ -142,15 +152,20 @@ const OwnersContainer = ({ owners, spectraInfo }) => {
   const changeOwner = (id, category = null) => {
     return function(newOwner) {
       const index = selectors.findIndex(selector => selector.id === id)
-      let newSelectors = update(selectors, {
-        [index]: {
-          owner: { $set: newOwner },
-          category: {
-            $set: newOwner ? owners[newOwner].category : category
+      let newSelectors
+      if (newOwner) {
+        newSelectors = update(selectors, {
+          [index]: {
+            owner: { $set: newOwner },
+            category: {
+              $set: newOwner ? owners[newOwner].category : category
+            }
           }
-        }
-      })
-      setSelectors(newSelectors)
+        })
+        setSelectors(newSelectors)
+      } else {
+        removeRow({ id, category, owner: newOwner })
+      }
     }
   }
 
@@ -178,15 +193,26 @@ const OwnersContainer = ({ owners, spectraInfo }) => {
   }
 
   const setSpectra = useMutation(SET_ACTIVE_SPECTRA)
-  const clearSpectra = () => {
+  const clearForm = (leave = [], appendSpectra = []) => {
+    const preserve = selectors.filter(({ category }) =>
+      leave.includes(category)
+    )
     setSelectors([
+      ...preserve,
       {
         id: selectorId.current++,
         owner: null,
         category: null
       }
     ])
-    setSpectra({ variables: { activeSpectra: [] } })
+    const keepSpectra = activeSpectra.filter(
+      id => spectraInfo[id] && leave.includes(spectraInfo[id].category)
+    )
+    setSpectra({
+      variables: {
+        activeSpectra: [...new Set([...keepSpectra, ...appendSpectra])]
+      }
+    })
   }
 
   selectors.sort(selectorSorter)
@@ -207,25 +233,18 @@ const OwnersContainer = ({ owners, spectraInfo }) => {
     )
   }
 
+  const width = useWindowWidth()
+
   return (
-    <div>
-      <div
-        style={{
-          position: "relative",
-          top: -4,
-          left: 4,
-          zIndex: 2
-        }}
-      >
-        <QuickEntry options={allOptions} />
-      </div>
+    <div style={{ paddingBottom: 100 }}>
       <Tabs
         value={tab}
         onChange={handleTabChange}
         indicatorColor="primary"
         textColor="primary"
-        variant="scrollable"
-        scrollButtons="auto"
+        centered={width >= 500 ? true : false}
+        variant={width >= 500 ? "standard" : "scrollable"}
+        scrollButtons="on"
         className={classes.tabHeader}
       >
         <Tab className={classes.tabLabel} label={smartLabel("All", null)} />
@@ -242,7 +261,6 @@ const OwnersContainer = ({ owners, spectraInfo }) => {
           className={classes.tabLabel}
           label={smartLabel("Detectors", ["C"])}
         />
-        <Tab className={classes.tabLabel} label="Options" />
       </Tabs>
 
       <TabContainer index={tab}>
@@ -260,20 +278,9 @@ const OwnersContainer = ({ owners, spectraInfo }) => {
         <div>{spectrumCategoryGroup("F", "filter")}</div>
         <div>{spectrumCategoryGroup("L", "light")}</div>
         <div>{spectrumCategoryGroup("C", "camera")}</div>
-
-        <div>
-          <ChartOptionsForm />
-          <OwnerOptionsForm />
-          <Button
-            variant="contained"
-            color="secondary"
-            className="mt-0"
-            onClick={clearSpectra}
-          >
-            Remove All Spectra
-          </Button>
-        </div>
       </TabContainer>
+
+      <MyAppBar spectraOptions={allOptions} clearForm={clearForm}/>
     </div>
   )
 }
@@ -289,5 +296,5 @@ OwnersContainer.defaultProps = {
 // here to make sure we always render each tab to maintain the formstate
 const TabContainer = ({ index, children }) =>
   children && React.cloneElement(children[index])
-  
+
 export default OwnersContainer

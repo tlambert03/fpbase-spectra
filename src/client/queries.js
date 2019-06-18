@@ -30,6 +30,55 @@ const batchSpectra = ids => {
   `
 }
 
+const OPTICAL_CONFIG_LIST = gql`
+  {
+    opticalConfigs {
+      id
+      name
+      comments
+      microscope {
+        id
+        name
+      }
+    }
+  }
+`
+
+const GET_OPTICAL_CONFIG = gql`
+  query OpticalConfig($id: Int!) {
+    opticalConfig(id: $id) {
+      id
+      name
+      microscope {
+        id
+        name
+      }
+      filters {
+        id
+        path
+        reflects
+        spectrum {
+          id
+        }
+      }
+      light {
+        id
+        spectrum {
+          id
+        }
+      }
+      camera {
+        id
+        spectrum {
+          id
+        }
+      }
+      laser
+      comments
+    }
+  }
+`
+
 const GET_SPECTRUM = gql`
   query Spectrum($id: Int!) {
     spectrum(id: $id) {
@@ -82,12 +131,6 @@ const GET_ACTIVE_SPECTRA = gql`
   }
 `
 
-const GET_ACTIVE_OWNERS = gql`
-  query ActiveOwners {
-    activeOwners @client
-  }
-`
-
 const GET_CHART_OPTIONS = gql`
   query ChartOptions {
     chartOptions @client {
@@ -116,12 +159,6 @@ const UPDATE_ACTIVE_SPECTRA = gql`
   }
 `
 
-const UPDATE_ACTIVE_OWNERS = gql`
-  mutation updateActiveOwners($add: [String], $remove: [String]) {
-    updateActiveOwners(add: $add, remove: $remove) @client
-  }
-`
-
 const GET_OWNER_OPTIONS = gql`
   {
     excludeSubtypes @client
@@ -129,14 +166,14 @@ const GET_OWNER_OPTIONS = gql`
 `
 
 export {
+  batchSpectra,
   GET_SPECTRUM,
   SPECTRA_LIST,
   GET_ACTIVE_SPECTRA,
   SET_ACTIVE_SPECTRA,
   UPDATE_ACTIVE_SPECTRA,
-  batchSpectra,
-  GET_ACTIVE_OWNERS,
-  UPDATE_ACTIVE_OWNERS,
   GET_CHART_OPTIONS,
-  GET_OWNER_OPTIONS
+  GET_OWNER_OPTIONS,
+  OPTICAL_CONFIG_LIST,
+  GET_OPTICAL_CONFIG
 }

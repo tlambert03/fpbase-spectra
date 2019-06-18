@@ -6,6 +6,7 @@ import Paper from "@material-ui/core/Paper"
 import PropTypes from "prop-types"
 import { makeStyles, useTheme } from "@material-ui/core/styles"
 import SortablePaginatedSelect from "./SortablePaginatedSelect"
+import Select from "react-select"
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -158,7 +159,7 @@ const myComponents = {
   ValueContainer
 }
 
-function MuiReactSelect(props) {
+function MuiReactSelect({ paginate, components, ...otherprops }) {
   const classes = useStyles()
   const theme = useTheme()
 
@@ -175,15 +176,28 @@ function MuiReactSelect(props) {
   return (
     <div className={classes.root}>
       <NoSsr>
-        <SortablePaginatedSelect
-          classes={classes}
-          styles={selectStyles}
-          components={myComponents}
-          {...props}
-        />
+        {paginate ? (
+          <SortablePaginatedSelect
+            {...otherprops}
+            classes={classes}
+            styles={selectStyles}
+            components={{ ...components, ...myComponents }}
+          />
+        ) : (
+          <Select
+            {...otherprops}
+            classes={classes}
+            styles={selectStyles}
+            components={{ ...components, ...myComponents }}
+          />
+        )}
       </NoSsr>
     </div>
   )
+}
+
+MuiReactSelect.defaultProps = {
+  paginate: true
 }
 
 export default MuiReactSelect

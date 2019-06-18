@@ -6,9 +6,16 @@ import ToggleButtonGroup from "@material-ui/lab/ToggleButtonGroup"
 import { useQuery, useMutation } from "react-apollo-hooks"
 import { GET_ACTIVE_SPECTRA, UPDATE_ACTIVE_SPECTRA } from "../client/queries"
 import { makeStyles } from "@material-ui/core"
+import Visibility from "@material-ui/icons/Visibility"
+import useWindowWidth from "./useWindowWidth"
 
-const useStyles = makeStyles(() => ({
-  toggleButton: { height: "38px" },
+const useStyles = makeStyles(theme => ({
+  toggleButton: {
+    height: "38px",
+    [theme.breakpoints.down("sm")]: {
+      height: "34px"
+    }
+  },
   toggleButtonGroup: { marginLeft: "5px" }
 }))
 
@@ -40,7 +47,9 @@ const SubtypeSelector = ({ subtypes, skip }) => {
     updateSpectra({ variables })
   }
 
-  if (skip) return null
+  //if (skip) return null
+
+  const width = useWindowWidth()
 
   return (
     <Box>
@@ -55,8 +64,12 @@ const SubtypeSelector = ({ subtypes, skip }) => {
             value={st.id}
             onClick={handleClick}
             className={classes.toggleButton}
+            style={{
+              padding: skip ? "0" : "inherit",
+              display: width > 560 ? "inherit" : "none"
+            }}
           >
-            {st.subtype.replace(/^A_/g, "")}
+            {skip ? <Visibility></Visibility> : st.subtype.replace(/^A_/g, "")}
           </ToggleButton>
         ))}
       </ToggleButtonGroup>

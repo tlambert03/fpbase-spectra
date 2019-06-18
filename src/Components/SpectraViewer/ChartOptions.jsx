@@ -96,8 +96,10 @@ const DEFAULT_OPTIONS = {
       },
       title: false
     },
+
     buttons: {
       contextButton: {
+        enabled: false,
         menuItems: [
           "downloadPNG",
           "downloadPDF",
@@ -115,9 +117,7 @@ const DEFAULT_OPTIONS = {
   },
   legend: {
     verticalAlign: "top",
-    align: "left",
-    x: -10,
-    y: -1,
+//    align: "left",
     itemStyle: {
       fontWeight: 600,
       fontSize: "11px",

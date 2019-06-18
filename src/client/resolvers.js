@@ -1,9 +1,8 @@
 import gql from "graphql-tag"
-import { GET_ACTIVE_SPECTRA, GET_ACTIVE_OWNERS } from "./queries"
+import { GET_ACTIVE_SPECTRA } from "./queries"
 
 export const defaults = {
   activeSpectra: [],
-  activeOwners: [],
   chartOptions: {
     showY: false,
     showX: true,
@@ -35,18 +34,18 @@ function toggleChartOption(cache, key) {
   return data
 }
 
-function spectrumFrag(cache, id) {
-  return cache.readFragment({
-    id: "SpectrumInfo:" + String(id),
-    fragment: gql`
-      fragment Spectrum on SpectrumInfo {
-        owner {
-          slug
-        }
-      }
-    `
-  })
-}
+// function spectrumFrag(cache, id) {
+//   return cache.readFragment({
+//     id: "SpectrumInfo:" + String(id),
+//     fragment: gql`
+//       fragment Spectrum on SpectrumInfo {
+//         owner {
+//           slug
+//         }
+//       }
+//     `
+//   })
+// }
 
 export const resolvers = {
   Mutation: {
@@ -81,7 +80,7 @@ export const resolvers = {
     },
     setActiveSpectra: async (_, { activeSpectra }, { cache, client }) => {
       const filtered = [...new Set(activeSpectra)]
-        .filter(id => Boolean(spectrumFrag(cache, id)))
+        //.filter(id => Boolean(spectrumFrag(cache, id)))
         .map(i => String(i))
       const data = {
         activeSpectra: filtered
@@ -101,22 +100,6 @@ export const resolvers = {
       }
       await client.writeQuery({ query: GET_ACTIVE_SPECTRA, data })
       return data
-    },
-    updateActiveOwners: async (_, obj, info) => {
-      return addRemoveOwners(obj, info)
     }
   }
-}
-
-async function addRemoveOwners({ add, remove }, { cache, client }) {
-  let { activeOwners } = cache.readQuery({ query: GET_ACTIVE_OWNERS })
-  activeOwners = activeOwners.filter(slug => !(remove || []).includes(slug))
-  const toAdd = add || []
-  const data = {
-    activeOwners: [...new Set([...activeOwners, ...toAdd])].filter(
-      i => i !== null
-    )
-  }
-  await client.writeQuery({ query: GET_ACTIVE_OWNERS, data })
-  return data
 }

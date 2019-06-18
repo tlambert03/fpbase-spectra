@@ -1,12 +1,43 @@
 import React from "react"
 import PropTypes from "prop-types"
 import Box from "@material-ui/core/Box"
-import { customFilterOption } from "../util"
 import { useQuery, useMutation } from "react-apollo-hooks"
 import { UPDATE_ACTIVE_SPECTRA, GET_OWNER_OPTIONS } from "../client/queries"
 import SubtypeSelector from "./SubtypeSelector"
 import SortablePaginatedSelect from "./SortablePaginatedSelect"
 import ProductLink from "./ProductLink"
+
+import theme from "./theme"
+const customStyles = {
+  control: provided => ({
+    ...provided,
+    [theme.breakpoints.down("sm")]: {
+      minHeight: 34,
+      height: 34
+    }
+  }),
+  placeholder: provided => ({
+    ...provided,
+    [theme.breakpoints.down("sm")]: {
+      top: "42%",
+      fontSize: "0.9rem"
+    }
+  }),
+  indicatorsContainer: provided => ({
+    ...provided,
+    [theme.breakpoints.down("sm")]: {
+      position: "relative",
+      top: "-1px",
+      height: 34
+    }
+  }),
+  singleValue: (provided, state) => ({
+    ...provided,
+    [theme.breakpoints.down("sm")]: {
+      fontSize: '0.9rem'
+    }
+  }),
+}
 
 const SpectrumSelector = ({
   options,
@@ -59,6 +90,7 @@ const SpectrumSelector = ({
           isClearable
           showIcon={showCategoryIcon}
           value={value}
+          styles={customStyles}
           placeholder="Type to search..."
           onChange={handleOwnerChange}
           options={myOptions}
