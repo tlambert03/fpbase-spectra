@@ -18,7 +18,7 @@ import DialogTitle from "@material-ui/core/DialogTitle"
 
 const useStyles = makeStyles(theme => ({
   root: {
-    width: "100%",
+
     "& h6": {
       color: "#333"
     },
@@ -64,6 +64,8 @@ const SearchModal = () => {
       onClose={() => setOpen(false)}
       aria-labelledby="scroll-dialog-title"
       className={classes.root}
+      fullWidth
+      maxWidth={'md'}
     >
       <DialogTitle id="scroll-dialog-title">
         {" "}

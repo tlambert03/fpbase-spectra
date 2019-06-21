@@ -6,7 +6,6 @@ import SpectrumSelector from "./SpectrumSelector"
 import { makeStyles } from "@material-ui/core/styles"
 import { categoryIcon } from "../Components/FaIcon"
 import Typography from "@material-ui/core/Typography"
-import useWindowWidth from "./useWindowWidth"
 
 export const useStyles = makeStyles(theme => ({
   root: {
@@ -14,14 +13,18 @@ export const useStyles = makeStyles(theme => ({
       height: 42
     }
   },
-  button: {
+  deleteButton: {
     top: -6,
     [theme.breakpoints.down("sm")]: {
       top: -8
     },
+    [theme.breakpoints.down("xs")]: {
+      display: "none"
+    },
     "&:hover": {
       // you want this to be the same as the backgroundColor above
-      backgroundColor: "#f8f8f8",
+      backgroundColor: "#fff",
+      color: "#C84064"
     }
   },
   addButton: {
@@ -70,8 +73,6 @@ const SpectrumSelectorGroup = ({
     L: "Light Sources",
     C: "Detectors"
   }
-
-  const width = useWindowWidth()
 
   // disable options that are already claimed by other selectors
   function makeOptions(selector) {
@@ -129,8 +130,8 @@ const SpectrumSelectorGroup = ({
                 <IconButton
                   aria-label="Delete"
                   color="secondary"
-                  className={classes.button}
-                  style={{ display: width > 560 ? "inherit" : "none" }}
+                  className={classes.deleteButton}
+                  tabIndex={-1}
                   onClick={() => removeRow(selector)}
                 >
                   <DeleteIcon />

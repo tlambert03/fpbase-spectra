@@ -1,11 +1,16 @@
-import React from "react"
+import React, { useEffect } from "react"
 import PropTypes from "prop-types"
 import Box from "@material-ui/core/Box"
-import { useQuery, useMutation } from "react-apollo-hooks"
-import { UPDATE_ACTIVE_SPECTRA, GET_OWNER_OPTIONS } from "../client/queries"
+import { useQuery, useMutation, useApolloClient } from "react-apollo-hooks"
+import {
+  UPDATE_ACTIVE_SPECTRA,
+  GET_OWNER_OPTIONS,
+  GET_SPECTRUM
+} from "../client/queries"
 import SubtypeSelector from "./SubtypeSelector"
 import SortablePaginatedSelect from "./SortablePaginatedSelect"
 import ProductLink from "./ProductLink"
+import { components } from "react-select"
 
 import theme from "./theme"
 const customStyles = {
@@ -15,6 +20,10 @@ const customStyles = {
       minHeight: 34,
       height: 34
     }
+  }),
+  menu: provided => ({
+    ...provided,
+    zIndex: "10000"
   }),
   placeholder: provided => ({
     ...provided,
@@ -34,9 +43,56 @@ const customStyles = {
   singleValue: (provided, state) => ({
     ...provided,
     [theme.breakpoints.down("sm")]: {
-      fontSize: '0.9rem'
+      fontSize: "0.9rem"
     }
-  }),
+  })
+}
+
+const SingleValue = ({ children, ...props }) => {
+  const client = useApolloClient()
+  const [extra, setExtra] = React.useState("")
+  useEffect(() => {
+    async function fetchQeEc(id) {
+      const { data } = await client.query({
+        query: GET_SPECTRUM,
+        variables: { id }
+      })
+      if (data.spectrum.owner) {
+        const { qy, extCoeff } = data.spectrum.owner
+        if (qy || extCoeff) {
+          let val = "("
+          if (qy) {
+            val += `QY: ${qy}`
+            if (extCoeff) val += " / "
+          }
+          if (extCoeff) val += `EC: ${extCoeff.toLocaleString()}`
+          val += ")"
+          setExtra(val)
+        }
+      }
+    }
+    if (props.data.category === "P" || props.data.category === "D") {
+      fetchQeEc(props.data.spectra[0].id)
+    }
+  }, [client, children, props.data.spectra, props.data.category])
+
+  return (
+    <components.SingleValue {...props}>
+      {children}{" "}
+      <span
+        style={{
+          fontSize: "0.76rem",
+          color: "#a9a9a9",
+          fontWeight: 600,
+          marginLeft: 5,
+          bottom: 1,
+          position: "relative"
+        }}
+      >
+        {extra}
+      </span>
+    </components.SingleValue>
+  )
 }
 
 const SpectrumSelector = ({
@@ -94,6 +150,7 @@ const SpectrumSelector = ({
           placeholder="Type to search..."
           onChange={handleOwnerChange}
           options={myOptions}
+          components={{ SingleValue }}
         />
       </Box>
       <SubtypeSelector

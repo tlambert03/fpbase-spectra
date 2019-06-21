@@ -21,6 +21,7 @@ const useStyles = makeStyles(theme => ({
     //marginBottom: 12,
     //marginLeft: 60,
     //paddingLeft: 0
+    whiteSpace: "nowrap"
   },
   tabLabel: {
     marginTop: 0,
@@ -98,6 +99,12 @@ const OwnersContainer = ({ owners, spectraInfo }) => {
         case "Digit4":
         case "Digit5":
           setTab(event.key - 1)
+          break
+        case "ArrowRight":
+          setTab(prevTab => (prevTab === 4 ? 0 : prevTab + 1))
+          break
+        case "ArrowLeft":
+          setTab(prevTab => (prevTab === 0 ? 4 : prevTab - 1))
           break
         default:
           break
@@ -183,7 +190,8 @@ const OwnersContainer = ({ owners, spectraInfo }) => {
     return (
       <span
         style={{
-          fontWeight: populated ? "bold" : "normal"
+          fontWeight: populated ? "bold" : "normal",
+          whiteSpace: "nowrap"
         }}
       >
         {label}
@@ -247,17 +255,24 @@ const OwnersContainer = ({ owners, spectraInfo }) => {
         scrollButtons="on"
         className={classes.tabHeader}
       >
-        <Tab className={classes.tabLabel} label={smartLabel("All", null)} />
+        <Tab           tabIndex={-1} className={classes.tabLabel} label={smartLabel("All", null)} />
         <Tab
           className={classes.tabLabel}
+          tabIndex={-1}
           label={smartLabel("Fluorophores", ["D", "P"])}
         />
         <Tab
           className={classes.tabLabel}
+          tabIndex={-1}
           label={smartLabel("Filters", ["F"])}
         />
-        <Tab className={classes.tabLabel} label={smartLabel("Lights", ["L"])} />
         <Tab
+          tabIndex={-1}
+          className={classes.tabLabel}
+          label={smartLabel("Lights", ["L"])}
+        />
+        <Tab
+          tabIndex={-1}
           className={classes.tabLabel}
           label={smartLabel("Detectors", ["C"])}
         />
@@ -280,7 +295,7 @@ const OwnersContainer = ({ owners, spectraInfo }) => {
         <div>{spectrumCategoryGroup("C", "camera")}</div>
       </TabContainer>
 
-      <MyAppBar spectraOptions={allOptions} clearForm={clearForm}/>
+      <MyAppBar spectraOptions={allOptions} clearForm={clearForm} />
     </div>
   )
 }

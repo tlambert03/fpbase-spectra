@@ -5,8 +5,11 @@ import { components } from "react-select"
 import PropTypes from "prop-types"
 
 try {
+  // eslint-disable-next-line react/forbid-foreign-prop-types
   delete AsyncPaginateBase.propTypes.selectRef
-} catch {}
+} catch (e) {
+  console.warn(e)
+}
 
 function optionsLoader(options, optionsPerLoad = 15) {
   return async (search, prevOptions) => {

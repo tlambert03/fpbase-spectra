@@ -22,13 +22,12 @@ const OwnerOptionsForm = () => {
     setSubtypes({ variables: { subtypes } })
   }
   return (
-    <Box>
-      <span style={{ marginLeft: 17 }}>Exclude subtypes:</span>
+    <Box style={{marginTop: 8}}>
+      <span style={{marginRight: 8}}>Exclude subtypes:</span>
       <ToggleButtonGroup
         value={excludeSubtypes}
         size="small"
         onChange={handleChange}
-        style={{ marginLeft: 15 }}
       >
         {["AB", "EX", "EM", "2P"].map(st => (
           <ToggleButton key={st} value={st} style={{ height: "38px" }}>
@@ -36,7 +35,7 @@ const OwnerOptionsForm = () => {
           </ToggleButton>
         ))}
       </ToggleButtonGroup>
-      <p style={{ marginLeft: 17, marginTop: 5, fontSize: "small", fontStyle: 'italic', color: '#999'}}>
+      <p style={{ marginTop: 6, fontSize: "small", fontStyle: 'italic', color: '#999'}}>
         spectrum types selected here will NOT be added by default when adding a new fluorophore
       </p>
     </Box>

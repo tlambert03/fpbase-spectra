@@ -1,10 +1,6 @@
 import React, { useRef } from "react"
-import {
-  SPECTRA_LIST,
-} from "./client/queries"
+import { SPECTRA_LIST } from "./client/queries"
 
-import { ApolloProvider } from "react-apollo-hooks"
-import client from "./client/client"
 import { reshapeSpectraInfo } from "./util"
 import { SpectraViewer } from "./Components/SpectraViewer"
 import OwnersContainer from "./Components/OwnersContainer"
@@ -24,7 +20,7 @@ const App = () => {
   return (
     <>
       <SpectraViewer spectraInfo={spectraInfo.current} />
-      {spectraInfo.current && (
+      {spectraInfo.current && owners.current && (
         <OwnersContainer
           owners={owners.current}
           spectraInfo={spectraInfo.current}
@@ -35,11 +31,4 @@ const App = () => {
   )
 }
 
-
-const AppWrapper = () => (
-  <ApolloProvider client={client}>
-    <App />
-  </ApolloProvider>
-)
-
-export default AppWrapper
+export default App

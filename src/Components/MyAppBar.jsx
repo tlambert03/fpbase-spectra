@@ -2,17 +2,10 @@ import React from "react"
 import { makeStyles } from "@material-ui/core/styles"
 import AppBar from "@material-ui/core/AppBar"
 import Toolbar from "@material-ui/core/Toolbar"
-import IconButton from "@material-ui/core/IconButton"
 import Fab from "@material-ui/core/Fab"
 
-import SettingsIcon from "@material-ui/icons/Settings"
 import AddIcon from "@material-ui/icons/Add"
 import SearchModal from "./SearchModal"
-import Drawer from "@material-ui/core/Drawer"
-import OwnerOptionsForm from "./OwnerOptionsForm"
-import ChartOptionsForm from "./SpectraViewer/ChartOptionsForm"
-import Button from "@material-ui/core/Button"
-import CloseIcon from "@material-ui/icons/Close"
 
 import { useMutation, useQuery } from "react-apollo-hooks"
 import { GET_CHART_OPTIONS } from "../client/queries"
@@ -20,19 +13,11 @@ import FormControlLabel from "@material-ui/core/FormControlLabel"
 import Switch from "@material-ui/core/Switch"
 import gql from "graphql-tag"
 import ShareButton from "./ShareButton"
+import SettingsDrawer from "./SettingsDrawer"
 
-const useStyles = makeStyles(theme => ({
+export const useStyles = makeStyles(theme => ({
   text: {
     padding: theme.spacing(2, 2, 0)
-  },
-  paper: {
-    paddingBottom: 50
-  },
-  list: {
-    marginBottom: theme.spacing(2)
-  },
-  subheader: {
-    backgroundColor: theme.palette.background.paper
   },
   appBar: {
     top: "auto",
@@ -53,18 +38,20 @@ const useStyles = makeStyles(theme => ({
     right: 0,
     margin: "0 auto"
   },
-  fullList: {
-    width: "auto",
-    padding: 30,
-    paddingTop: 10,
+  spaceBar: {
     [theme.breakpoints.down("sm")]: {
-      padding: 15,
-      paddingTop: 10,
-      paddingBottom: 20
-    }
-  },
-  listCheckbox: {
-    display: "none"
+      display: "none"
+    },
+    color: "rgba(255,255,255,0.2)",
+    textTransform: "uppercase",
+    position: "absolute",
+    fontSize: "0.85rem",
+    zIndex: 1,
+    left: 0,
+    right: 0,
+    top: 30,
+    margin: "0 auto",
+    width: "71px"
   }
 }))
 
@@ -72,19 +59,6 @@ const MyAppBar = ({ spectraOptions, clearForm }) => {
   const classes = useStyles()
   const [searchOpen, setSearchOpen] = React.useState(false)
   const handleClick = () => setSearchOpen(true)
-
-  const [drawerOpen, setDrawerOpen] = React.useState(false)
-
-  const toggleDrawer = event => {
-    if (
-      event &&
-      event.type === "keydown" &&
-      (event.key === "Tab" || event.key === "Shift")
-    ) {
-      return
-    }
-    setDrawerOpen(!drawerOpen)
-  }
 
   const {
     data: {
@@ -101,26 +75,22 @@ const MyAppBar = ({ spectraOptions, clearForm }) => {
     <>
       <AppBar position="fixed" color="primary" className={classes.appBar}>
         <Toolbar>
-          <IconButton
-            onClick={toggleDrawer}
-            edge="start"
-            color="inherit"
-            aria-label="Open drawer"
-          >
-            <SettingsIcon />
-          </IconButton>
+          <SettingsDrawer clearForm={clearForm}></SettingsDrawer>
           <Fab
+            tabIndex={-1}
             onClick={handleClick}
             aria-label="Add"
             className={classes.fabButton}
           >
             <AddIcon />
           </Fab>
+          <div className={classes.spaceBar}>spacebar</div>
           <div className={classes.grow} />
           <FormControlLabel
-          labelPlacement="start"
+            labelPlacement="start"
             control={
               <Switch
+                tabIndex={-1}
                 checked={logScale}
                 onChange={toggleLogScale}
                 color="default"
@@ -137,34 +107,6 @@ const MyAppBar = ({ spectraOptions, clearForm }) => {
         clearForm={clearForm}
         setOpen={setSearchOpen}
       />
-      <Drawer anchor="bottom" open={drawerOpen} onClose={toggleDrawer}>
-        <div
-          className={classes.fullList}
-          role="presentation"
-          //onClick={toggleDrawer(side, false)}
-        >
-          <ChartOptionsForm />
-          <OwnerOptionsForm />
-          <Button
-            color="secondary"
-            onClick={toggleDrawer}
-            style={{ marginLeft: "-10px" }}
-          >
-            <CloseIcon></CloseIcon>
-          </Button>
-          <Button
-            variant="contained"
-            color="secondary"
-            style={{ float: "right" }}
-            onClick={() => {
-              clearForm()
-              toggleDrawer()
-            }}
-          >
-            Remove All Spectra
-          </Button>
-        </div>
-      </Drawer>
     </>
   )
 }

@@ -73,9 +73,18 @@ export const resolvers = {
     toggleAreaFill: (_root, variables, { cache }) => {
       return toggleChartOption(cache, "areaFill")
     },
-    setChartExtremes: (_root, { extremes }, { cache }) => {
+    setChartExtremes: (_root, { extremes }, { client }) => {
       const data = { chartOptions: { extremes, __typename: "chartOptions" } }
-      cache.writeData({ data })
+      client.writeQuery({
+        query: gql`
+          {
+            chartOptions @client {
+              extremes
+            }
+          }
+        `,
+        data
+      })
       return data
     },
     setActiveSpectra: async (_, { activeSpectra }, { cache, client }) => {

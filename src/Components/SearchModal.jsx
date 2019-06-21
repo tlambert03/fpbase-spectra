@@ -17,7 +17,7 @@ import Checkbox from "@material-ui/core/Checkbox"
 import FormControlLabel from "@material-ui/core/FormControlLabel"
 
 function getModalStyle() {
-  const top = 42
+  const top = 40
   const left = 42
 
   return {

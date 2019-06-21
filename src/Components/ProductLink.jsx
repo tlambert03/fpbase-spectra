@@ -14,6 +14,7 @@ const ProductLink = ({ current }) => {
       aria-label="Delete"
       href={ownerLink}
       target="_blank"
+      tabIndex={-1}
       style={{ padding: 6, marginLeft: 10, marginRight: 2 }}
     >
       <LinkIcon />

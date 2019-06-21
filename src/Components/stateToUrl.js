@@ -8,8 +8,8 @@ function stateToUrl(activeSpectra, chartOptions, skip) {
       let opts = { ...chartOptions }
       delete opts.__typename
       const [xMin, xMax] = opts.extremes
-      opts.xMin = xMin
-      opts.xMax = xMax
+      if (xMin) opts.xMin = xMin
+      if (xMax) opts.xMax = xMax
       delete opts.extremes
       Object.keys(opts).forEach(key => {
         if (typeof opts[key] === "boolean") {
@@ -18,7 +18,8 @@ function stateToUrl(activeSpectra, chartOptions, skip) {
       })
       qstrings.push(qs.stringify(opts))
     }
-    return qstrings.length ? "?" + qstrings.join("&") : ""
+    const { origin, pathname } = window.location
+    return qstrings.length ? origin + pathname + "?" + qstrings.join("&") : ""
   }
   return ""
 }

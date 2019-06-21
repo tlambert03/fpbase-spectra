@@ -1,9 +1,22 @@
 {
-  "name": "spectra",
+  "name": "fpbase-spectra",
   "version": "0.1.0",
+  "description": "React component for viewing spectra from fpbase.org",
+  "license": "MIT",
+  "main": "dist/index.js",
   "private": true,
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "webpack-dev-server --mode development --open",
+    "transpile": "rm -rf ./dist && babel src -d dist --copy-files",
+    "prepublishOnly": "npm run transpile",
+    "build": "webpack --mode production",
+    "deploy": "gh-pages -d examples/dist",
+    "publish-demo": "npm run build && npm run deploy"
+  },
   "dependencies": {
     "@fortawesome/fontawesome-svg-core": "^1.2.19",
+    "@fortawesome/free-brands-svg-icons": "^5.9.0",
     "@fortawesome/free-solid-svg-icons": "^5.9.0",
     "@graphql-codegen/cli": "^1.2.1",
     "@material-ui/core": "^4.1.1",
@@ -11,7 +24,6 @@
     "@material-ui/lab": "^4.0.0-alpha.16",
     "@material-ui/styles": "^4.1.1",
     "@welldone-software/why-did-you-render": "^3.2.0",
-    "apollo-boost": "^0.4.2",
     "apollo-cache-inmemory": "^1.6.2",
     "apollo-cache-persist": "^0.1.1",
     "apollo-client": "^2.6.2",
@@ -19,36 +31,54 @@
     "apollo-link-batch-http": "^1.2.12",
     "apollo-link-error": "^1.1.11",
     "apollo-link-http": "^1.5.15",
+    "caniuse-lite": "^1.0.30000976",
+    "clipboard": "^2.0.4",
     "graphql": "^14.3.1",
     "graphql-tag": "^2.10.1",
     "highcharts": "^7.1.2",
     "immutability-helper": "^3.0.1",
     "immutable": "^4.0.0-rc.12",
     "qs": "^6.7.0",
-    "react": "^16.8.6",
     "react-apollo": "^2.5.6",
     "react-apollo-hooks": "^0.4.5",
-    "react-dom": "^16.8.6",
     "react-jsx-highcharts": "^3.6.0",
-    "react-scripts": "3.0.1",
     "react-select": "^3.0.4",
-    "react-select-async-paginate": "^0.3.4",
-    "react-select-fast-filter-options": "^0.2.3"
+    "react-select-async-paginate": "^0.3.4"
+  },
+  "peerDependencies": {
+    "react": ">=16.8.6",
+    "react-dom": ">=16.8.6"
   },
   "devDependencies": {
+    "@babel/cli": "^7.4.4",
     "@babel/core": "^7.4.5",
     "@babel/preset-env": "^7.4.5",
     "@babel/preset-react": "^7.0.0",
+    "babel-eslint": "^9.0.0",
+    "babel-loader": "^8.0.6",
+    "css-loader": "^3.0.0",
+    "eslint": "^5.16.0",
+    "eslint-config-react-app": "^4.0.1",
+    "eslint-plugin-flowtype": "^2.50.3",
+    "eslint-plugin-import": "^2.17.3",
+    "eslint-plugin-jsx-a11y": "^6.2.1",
+    "eslint-plugin-react": "^7.13.0",
+    "eslint-plugin-react-hooks": "^1.5.0",
+    "gh-pages": "^2.0.1",
+    "html-webpack-plugin": "^3.2.0",
+    "react": "^16.8.6",
+    "react-dom": "^16.8.6",
+    "style-loader": "^0.23.1",
+    "webpack": "^4.35.0",
+    "webpack-cli": "^3.3.4",
+    "webpack-dev-server": "^3.7.2",
     "@graphql-codegen/typescript": "1.2.1",
     "@graphql-codegen/typescript-operations": "1.2.1",
     "@graphql-codegen/typescript-react-apollo": "1.2.1"
   },
-  "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject",
-    "codegen": "graphql-codegen --config codegen.yml"
+  "author": {
+    "name": "Talley Lambert",
+    "email": "talley.lambert@gmail.com"
   },
   "eslintConfig": {
     "extends": "react-app"

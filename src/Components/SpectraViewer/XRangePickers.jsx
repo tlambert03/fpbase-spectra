@@ -35,6 +35,7 @@ const GET_CHART_EXTREMES = gql`
   }
 `
 
+let counter = 0
 const XRangePickers = ({ getAxis, getHighcharts, visible }) => {
   const {
     data: {
@@ -47,6 +48,7 @@ const XRangePickers = ({ getAxis, getHighcharts, visible }) => {
   const minNode = useRef()
   const maxNode = useRef()
   const axis = getAxis()
+  const forceUpdate = React.useState()[1];
 
   useEffect(() => {
     if (min || max) {
@@ -66,6 +68,7 @@ const XRangePickers = ({ getAxis, getHighcharts, visible }) => {
           e.userMax && Math.round(e.max)
         ]
         mutateExtremes({ variables: { extremes } })
+        forceUpdate(counter++)
       }
     }
 
@@ -101,6 +104,8 @@ const XRangePickers = ({ getAxis, getHighcharts, visible }) => {
 
     const Highcharts = getHighcharts()
     Highcharts.addEvent(axis.object.chart, "redraw", positionInputs)
+    Highcharts.addEvent(axis.object, 'afterSetExtremes', handleAfterSetExtremes);
+
     Highcharts.addEvent(
       axis.object.chart,
       "redraw",

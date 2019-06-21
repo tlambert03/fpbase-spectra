@@ -87,6 +87,7 @@ const DEFAULT_OPTIONS = {
     }
   },
   exporting: {
+    filename: 'FPbase_Spectra.csv',
     sourceWidth: 1200,
     scale: 1,
     csv: {},
